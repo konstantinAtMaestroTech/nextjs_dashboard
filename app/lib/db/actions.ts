@@ -1,0 +1,297 @@
+'use server'
+
+import {revalidatePath} from 'next/cache';
+import {redirect} from 'next/navigation';
+import {z} from 'zod';
+import {pool} from '@/app/lib/db/pool';
+import {v4} from 'uuid';
+
+const FormSchemaSupplier = z.object({
+    id: z.string(),
+    name: z.string({
+        invalid_type_error: 'Please enter a valid customer name',
+    }),
+    email: z.string().email({message: 'Please enter a valid email'}),
+    phone: z.string({
+        invalid_type_error: 'Please enter a valid phone number',
+    }),
+    address: z.string({message: 'Please enter a valid address'}),
+});
+
+const FormSchemaSupplierOptional = FormSchemaSupplier.extend({
+    url: z.string(),
+    notes: z.string(),  
+    contact: z.string(),
+    contact_number: z.string(),
+    vat: z.string(),
+    tax_code: z.string()
+});
+
+const CreateSupplier = FormSchemaSupplier.omit({id: true});
+
+const UpdateSupplier = FormSchemaSupplier.omit({ id:true});
+
+export type StateSupplier = {
+    errors?: {
+        name?: string[];
+        email?: string[];
+        phone?: string[];
+        address?: string[];
+    };
+    message?: string | null;
+};
+
+const FormSchemaMachine = z.object({
+    id: z.string(),
+    model: z.string({
+        invalid_type_error: 'Please enter a valid model name',
+    }),
+    website: z.string({message: 'Please enter a valid website URL'}),
+    supplier: z.string({
+        invalid_type_error: 'Please select the supplier',
+    }),
+    type: z.string({message: 'Please select the machine type'}),
+});
+
+const CreateMachine = FormSchemaMachine.omit({id: true});
+
+export type StateMachine = {
+    errors?: {
+        model?: string[];
+        website?: string[];
+        supplier?: string[];
+        type?: string[];
+    };
+    message?: string | null;
+}
+
+// supplier
+
+export async function deleteSupplier(id:string) {
+    
+    try {
+        await pool.query(`
+            DELETE FROM supplier_machine WHERE supplier_id = '${id}';
+            DELETE FROM suppliers WHERE id='${id}';
+            `);
+    } catch (error) {
+        console.log(error)
+    }
+    
+    revalidatePath('/dashboard/suppliers');
+}
+
+export async function createSupplier(prevState: StateSupplier, formData: FormData) {
+    
+    const validatedFields = CreateSupplier.safeParse({
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone_main'),
+        address: formData.get('address')
+    });
+
+    if (!validatedFields.success) {
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Missing Fields. Failed to Create Supplier.',
+        };
+    }
+
+
+    const id = v4(); 
+    const { name, email, phone, address } = validatedFields.data;
+    const optionalFields: { [key: string]: any } = {  // HACKED
+        url: "url", 
+        notes: "notes", 
+        contact: "contact", 
+        contact_number: "contact number",
+        vat: "vat",
+        tax_code: "tax code"
+    };
+
+    Object.entries(optionalFields).forEach(([key,value]) => {
+        formData.get(value)? optionalFields[key] = formData.get(value) : optionalFields[key] = `No ${value} provided`;
+    })
+
+    try {
+        
+        await pool.query(`
+            INSERT INTO suppliers (id, name, email, phone, address, url, notes, contact, contact_number, vat, tax_code)
+            VALUES ('${id}', "${name}", "${email}", "${phone}", "${address}", "${optionalFields.url}", "${optionalFields.notes}", "${optionalFields.contact}", "${optionalFields.contact_number}", "${optionalFields.vat}", "${optionalFields.tax_code}")
+        `);
+        
+    } catch (error) {
+        return {
+            message: 'Database Error: Failed to create invoice'
+        }
+    }
+
+    revalidatePath('/dashboard/suppliers');
+    redirect('/dashboard/suppliers');    
+}
+
+export async function updateSupplier(id:string, formData: FormData) {
+
+    const validatedFields = UpdateSupplier.safeParse({
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone_main'),
+        address: formData.get('address')
+    });
+
+    if (!validatedFields.success) {
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Missing Fields. Failed to Update Invoice.',
+        };
+    }
+
+    const optionalFields: { [key: string]: any } = {  // HACKED
+        url: "url", 
+        notes: "notes", 
+        contact: "contact", 
+        contact_number: "contact number",
+        vat: "vat",
+        tax_code: "tax code"
+    };
+
+    Object.entries(optionalFields).forEach(([key,value]) => {
+        formData.get(value)? optionalFields[key] = formData.get(value) : optionalFields[key] = `No ${value} provided`;
+    })
+
+    try {
+        console.log(id)
+        const [result,field] = await pool.query(`
+        UPDATE suppliers
+        SET name = '${validatedFields.data.name}', email = '${validatedFields.data.email}', phone = '${validatedFields.data.phone}', address = '${validatedFields.data.address}', url = '${optionalFields.url}', notes = '${optionalFields.notes}', contact = '${optionalFields.contact}', contact_number = '${optionalFields.contact_number}', vat = '${optionalFields.vat}', tax_code = '${optionalFields.tax_code}'
+        WHERE id = '${id}'
+        `) ;
+        console.log(result)
+    } catch (error) {
+
+        console.log(error);
+
+    }
+
+    revalidatePath('/dashboard/suppliers');
+    redirect('/dashboard/suppliers  ');
+}
+
+// machine
+
+export async function deleteMachine(id:string) {
+    
+    try {
+        await pool.query(`DELETE FROM machinery WHERE id = '${id}'`);
+    } catch (error) {
+        console.log(error)
+    }
+    
+    revalidatePath('/dashboard/machinery');
+}
+
+export async function createMachine(prevState: StateMachine, formData: FormData) {
+    
+    const validatedFields = CreateMachine.safeParse({
+        model: formData.get('model'),
+        website: formData.get('website'),
+        supplier: formData.get('owner'),
+        type: formData.get('type')
+    });
+
+    console.log(formData);
+
+    if (!validatedFields.success) {
+        console.log("validatedFields is not successfull");
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Missing Fields. Failed to Add Machine.',
+        };
+        
+    }
+
+
+    const id = v4(); 
+    const { model, website, supplier, type } = validatedFields.data;
+
+    try {
+        
+        await pool.query(`
+            INSERT INTO machinery (id, model, producer_website, supplier_id, type)
+            SELECT '${id}', "${model}", "${website}", s.id , "${type}"
+            FROM suppliers s
+            WHERE s.name = "${supplier}"
+        `);
+        
+    } catch (error) {
+        console.log("db query is not successfull");
+        return {
+            message: 'Database Error: Failed to create machine'
+        }
+    }
+
+    revalidatePath('/dashboard/machinery');
+    //revalidatePath('/dashboard/suppliers'); Let's see if we need to revalidate this path as well
+    redirect('/dashboard/machinery');  
+}
+
+// project
+
+export async function deleteProject(id:string) {
+    
+    try {
+        await pool.query(`
+            DELETE FROM project_client_page WHERE project_id = '${id}';
+            DELETE FROM projects WHERE id='${id}';
+            `);
+    } catch (error) {
+        console.log(error)
+    }
+    
+    revalidatePath('/dashboard/projects');
+}
+
+export async function createProject(prevState: StateMachine, formData: FormData) {
+
+    const validatedFields = CreateMachine.safeParse({
+        model: formData.get('model'),
+        website: formData.get('website'),
+        supplier: formData.get('owner'),
+        type: formData.get('type')
+    });
+
+    console.log(formData);
+
+    if (!validatedFields.success) {
+        console.log("validatedFields is not successfull");
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Missing Fields. Failed to Add Machine.',
+        };
+        
+    }
+
+
+    const id = v4(); 
+    const { model, website, supplier, type } = validatedFields.data;
+
+    try {
+        
+        await pool.query(`
+            INSERT INTO faketable (id, model, producer_website, supplier_id, type)
+            SELECT '${id}', "${model}", "${website}", s.id , "${type}"
+            FROM suppliers s
+            WHERE s.name = "${supplier}"
+        `);
+        
+    } catch (error) {
+        console.log("db query is not successfull");
+        return {
+            message: 'Database Error: Failed to create machine'
+        }
+    }
+
+    revalidatePath('/dashboard/machinery');
+    //revalidatePath('/dashboard/suppliers'); Let's see if we need to revalidate this path as well
+    redirect('/dashboard/machinery');  
+}
