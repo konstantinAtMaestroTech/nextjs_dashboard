@@ -199,8 +199,6 @@ export async function createMachine(prevState: StateMachine, formData: FormData)
         type: formData.get('type')
     });
 
-    console.log(formData);
-
     if (!validatedFields.success) {
         console.log("validatedFields is not successfull");
         return {
@@ -210,15 +208,44 @@ export async function createMachine(prevState: StateMachine, formData: FormData)
         
     }
 
+    const optionalFields: { [key: string]: any } = {
+        x: '-',
+        y: '-',
+        z: '-',
+        r: '-'
+    }
+
+    const machineTypesMapping: { [key: string]: any } = {  // HACKED
+        '3D Printing': {x:"x-3d",y:"y-3d",z:"z-3d"},
+        '5-axis CNC Machine': {x:"x-5-axis" ,y:"y-5-axis",z:"z-5-axis"},
+        'CNC Laser Cutter': {x:"x-laser",y:"y-laser"},
+        'CNC Lathe': {r:"r-lathe",y:"y-lathe"},
+        'CNC Milling Machine (3, 2.5 axis)': {x:"x-3-axis" ,y:"y-3-axis",z:"z-3-axis"},
+        'CNC Plasma Cutter': {x:"x-plasma" ,y:"y-plasma",z:"z-plasma"},
+        'CNC Press Brake': {y:"y-press"},
+        'CNC Waterjet Cutter': {x:"x-waterjet",y:"y-waterjet"}
+    };
 
     const id = v4(); 
     const { model, website, supplier, type } = validatedFields.data;
 
+    const selectedType = machineTypesMapping[type];
+
+    Object.keys(optionalFields).forEach(key => {
+        if (selectedType[key] !== undefined) {
+            optionalFields[key] = selectedType[key];
+        }
+    });
+
+    Object.entries(optionalFields).forEach(([key,value]) => {
+        formData.get(value)? optionalFields[key] = formData.get(value) : optionalFields[key] = `-`;
+    })
+
     try {
         
         await pool.query(`
-            INSERT INTO machinery (id, model, producer_website, supplier_id, type)
-            SELECT '${id}', "${model}", "${website}", s.id , "${type}"
+            INSERT INTO machinery (id, model, producer_website, supplier_id, type, x, y, z, r)
+            SELECT '${id}', "${model}", "${website}", s.id , "${type}", "${optionalFields.x}", "${optionalFields.y}", "${optionalFields.z}", "${optionalFields.r}"
             FROM suppliers s
             WHERE s.name = "${supplier}"
         `);

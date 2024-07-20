@@ -3,11 +3,10 @@
 import Link from 'next/link';
 import {
   LinkIcon,
-  PhoneIcon,
+  ChevronUpDownIcon,
   Cog6ToothIcon,
   UserCircleIcon,
-  PencilSquareIcon,
-  HomeModernIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
 import {createMachine, StateMachine} from '@/app/lib/db/actions';
@@ -19,11 +18,13 @@ interface MachineryType {
 
 
 export default function Form({machineryTypes, selectedSupplier}: {machineryTypes: MachineryType[], selectedSupplier: string | null}) {
+  
   const initialState: StateMachine = {message:null, errors: {}};
   const [state, formAction] = useActionState(createMachine, initialState);
   const [notes, setNotes] = useState('');
   const [website, setWebsite] = useState('');
   const [websiteError, setWebsiteError] = useState('');
+  const [selectedType, setSelectedType] = useState<string>('');
 
   const characterLimit = 128;
 
@@ -35,16 +36,17 @@ export default function Form({machineryTypes, selectedSupplier}: {machineryTypes
     setWebsite(event.target.value);
   };
 
+  const handleMachineryTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedType(event.target.value)
+  };
+
   const validateWebsite = () => {
     console.log(website);
     const regex = /^https:\/\/([\w-]+(\.[\w-]+)+)(\/[\w-]*)*$/;
     if (!regex.test(website)) {
       setWebsiteError('Please enter a valid website address starting with https://.');
-      console.log('unvalidated');
       return false;
     } else {
-      console.log('validated');
-      setWebsiteError('');
       return true;
     }
   };
@@ -59,6 +61,243 @@ export default function Form({machineryTypes, selectedSupplier}: {machineryTypes
       console.log('Form submitted');
     } else {
       console.log('Form not submitted due to validation error');
+    }
+  };
+
+  const renderConditionalElements = () => {
+    switch (selectedType) {
+      case '3D Printing':
+        return (
+          <div className="flex flex-row items-center mt-2 rounded-md space-x-2">
+            <label htmlFor="x-3d" className=" block text-sm font-medium">Width (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="x-3d" 
+                name="x-3d"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="y-3d" className=" block text-sm font-medium">Length (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="y-3d" 
+                name="y-3d"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="z-3d" className=" block text-sm font-medium">Height (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="z-3d" 
+                name="z-3d"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+          </div>
+        );
+      case '5-axis CNC Machine':
+        return (
+          <div className="flex flex-row items-center mt-2 rounded-md space-x-2">
+            <label htmlFor="x-5-axis" className=" block text-sm font-medium">Width (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="x-5-axis" 
+                name="x-5-axis"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="y-5-axis" className=" block text-sm font-medium">Length (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="y-5-axis" 
+                name="y-5-axis"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="z-5-axis" className=" block text-sm font-medium">Height (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="z-5-axis" 
+                name="z-5-axis"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+          </div>
+        );
+      case 'CNC Laser Cutter':
+        return (
+          <div className="flex flex-row items-center mt-2 rounded-md space-x-2">
+            <label htmlFor="x-laser" className=" block text-sm font-medium">Width (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="x-laser" 
+                name="x-laser"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="y-laser" className=" block text-sm font-medium">Length (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="y-laser" 
+                name="y-laser"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+          </div>
+        );
+      case 'CNC Lathe':
+        return (
+          <div className="flex flex-row items-center mt-2 rounded-md space-x-2">
+            <label htmlFor="r-lathe" className=" block text-sm font-medium">Radius (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="r-lathe" 
+                name="r-lathe"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="y-lathe" className=" block text-sm font-medium">Length (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="y-lathe" 
+                name="y-lathe"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+          </div>
+        );
+      case 'CNC Milling Machine (3, 2.5 axis)':
+        return (
+          <div className="flex flex-row items-center mt-2 rounded-md space-x-2">
+            <label htmlFor="x-3-axis" className=" block text-sm font-medium">Width (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="x-3-axis" 
+                name="x-3-axis"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="y-3-axis" className=" block text-sm font-medium">Length (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="y-3-axis" 
+                name="y-3-axis"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="z-3-axis" className=" block text-sm font-medium">Height (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="z-3-axis" 
+                name="z-3-axis"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+          </div>
+        );
+      case 'CNC Plasma Cutter':
+        return (
+          <div className="flex flex-row items-center mt-2 rounded-md space-x-2">
+            <label htmlFor="x-plasma" className=" block text-sm font-medium">Width (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="x-plasma" 
+                name="x-plasma"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="y-plasma" className=" block text-sm font-medium">Length (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="y-plasma" 
+                name="y-plasma"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="z-plasma" className=" block text-sm font-medium">Height (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="z-plasma" 
+                name="z-plasma"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+          </div>
+        );
+      case 'CNC Press Brake':
+        return (
+          <div className="flex flex-row items-center mt-2 rounded-md space-x-2">
+            <label htmlFor="y-press" className=" block text-sm font-medium">Length (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="y-press" 
+                name="y-press"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+          </div>
+        );
+      case 'CNC Waterjet Cutter':
+        return (
+          <div className="flex flex-row items-center mt-2 rounded-md space-x-2">
+            <label htmlFor="x-waterjet" className=" block text-sm font-medium">Width (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="x-waterjet" 
+                name="x-waterjet"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+            <label htmlFor="y-waterjet" className=" block text-sm font-medium">Length (mm)</label>
+            <div className='relative flex-grow'>
+              <input 
+                type="text" 
+                id="y-waterjet" 
+                name="y-waterjet"
+                className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
+              />
+              <ChevronUpDownIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+            </div>
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
@@ -180,6 +419,7 @@ export default function Form({machineryTypes, selectedSupplier}: {machineryTypes
                 name="type"
                 className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 defaultValue=""
+                onChange={handleMachineryTypeChange}
                 required
               >
                 <option value="" disabled>
@@ -193,8 +433,10 @@ export default function Form({machineryTypes, selectedSupplier}: {machineryTypes
               </select>
               <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
             </div>
-        </div>
 
+            {renderConditionalElements()}
+
+        </div>
       <div className="mt-6 flex justify-end gap-4">
         <Link
           href="/dashboard/machinery"

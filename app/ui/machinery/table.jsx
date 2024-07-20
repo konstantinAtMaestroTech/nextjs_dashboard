@@ -1,4 +1,4 @@
-import { UpdateSupplier, DeleteSupplier, InfoSupplier } from '@/app/ui/suppliers/buttons';
+import { UpdateMachine, DeleteMachine, InfoMachine } from '@/app/ui/machinery/buttons';
 import { fetchFilteredMachinery } from '@/app/lib/db/data';
 import Link from 'next/Link';
 
@@ -29,8 +29,9 @@ export default async function MachinesTable({
                     <p>{machine.type}</p>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <UpdateSupplier id={machine.id} />
-                    <DeleteSupplier id={machine.id} />
+                    <InfoMachine id={machine.id} />
+                    <UpdateMachine id={machine.id} />
+                    <DeleteMachine id={machine.id} />
                   </div>
                 </div>
               </div>
@@ -76,8 +77,9 @@ export default async function MachinesTable({
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
-                      <UpdateSupplier id={machine.id} />
-                      <DeleteSupplier id={machine.id} />
+                      <InfoMachine id={machine.id} />
+                      <UpdateMachine id={machine.id} />
+                      <DeleteMachine id={machine.id} />
                     </div>
                   </td>
                 </tr>
