@@ -5,22 +5,25 @@ import {
   UserCircleIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
-import {createProject, StateMachine} from '@/app/lib/db/actions';
-import {useActionState} from 'react';
+import {createProject, StateProject} from '@/app/lib/db/actions';
+import {useActionState, useState} from 'react';
 import Search from '@/app/ui/projects/search-suppliers'
+import DropDown from '@/app/ui/projects/search-dropdown'
+import Selected from '@/app/ui/projects/selected-suppliers'
 
 interface MachineryType {
   type: string;
 }
 
-export default function Form({suppliers, selectedSupplier}: {suppliers: string[] | null, selectedSupplier: string[] | null}) {
-  const initialState: StateMachine = {message:null, errors: {}};
+export default function Form({suppliers}: {suppliers: any[] | null}) {
+
+  const initialState: StateProject = {message:null, errors: {}};
   const [state, formAction] = useActionState(createProject, initialState);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<any[]>([]);
 
   return (
     <form action={formAction}>
       <div className="flex items-stretch justify-center">
-
         <div className="w-full rounded-md bg-gray-50 p-4 md:p-6">
           {/* Project title */}
           <div className="mb-4">
@@ -43,6 +46,8 @@ export default function Form({suppliers, selectedSupplier}: {suppliers: string[]
             </div>
           </div>
           <Search placeholder='Search for the suppliers'/>
+          <DropDown query={suppliers} setSelectedSuppliers={setSelectedSuppliers}/>
+          <Selected selection={selectedSuppliers} setSelectedSuppliers={setSelectedSuppliers}/> 
         </div>
       </div>
 

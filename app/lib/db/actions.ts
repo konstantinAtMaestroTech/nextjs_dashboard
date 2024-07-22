@@ -6,6 +6,8 @@ import {z} from 'zod';
 import {pool} from '@/app/lib/db/pool';
 import {v4} from 'uuid';
 
+// supplier schemas
+
 const FormSchemaSupplier = z.object({
     id: z.string(),
     name: z.string({
@@ -16,15 +18,6 @@ const FormSchemaSupplier = z.object({
         invalid_type_error: 'Please enter a valid phone number',
     }),
     address: z.string({message: 'Please enter a valid address'}),
-});
-
-const FormSchemaSupplierOptional = FormSchemaSupplier.extend({
-    url: z.string(),
-    notes: z.string(),  
-    contact: z.string(),
-    contact_number: z.string(),
-    vat: z.string(),
-    tax_code: z.string()
 });
 
 const CreateSupplier = FormSchemaSupplier.omit({id: true});
@@ -41,31 +34,7 @@ export type StateSupplier = {
     message?: string | null;
 };
 
-const FormSchemaMachine = z.object({
-    id: z.string(),
-    model: z.string({
-        invalid_type_error: 'Please enter a valid model name',
-    }),
-    website: z.string({message: 'Please enter a valid website URL'}),
-    supplier: z.string({
-        invalid_type_error: 'Please select the supplier',
-    }),
-    type: z.string({message: 'Please select the machine type'}),
-});
-
-const CreateMachine = FormSchemaMachine.omit({id: true});
-
-export type StateMachine = {
-    errors?: {
-        model?: string[];
-        website?: string[];
-        supplier?: string[];
-        type?: string[];
-    };
-    message?: string | null;
-}
-
-// supplier
+// supplier actions
 
 export async function deleteSupplier(id:string) {
     
@@ -177,7 +146,33 @@ export async function updateSupplier(id:string, formData: FormData) {
     redirect('/dashboard/suppliers  ');
 }
 
-// machine
+// machine schemas
+
+const FormSchemaMachine = z.object({
+    id: z.string(),
+    model: z.string({
+        invalid_type_error: 'Please enter a valid model name',
+    }),
+    website: z.string({message: 'Please enter a valid website URL'}),
+    supplier: z.string({
+        invalid_type_error: 'Please select the supplier',
+    }),
+    type: z.string({message: 'Please select the machine type'}),
+});
+
+const CreateMachine = FormSchemaMachine.omit({id: true});
+
+export type StateMachine = {
+    errors?: {
+        model?: string[];
+        website?: string[];
+        supplier?: string[];
+        type?: string[];
+    };
+    message?: string | null;
+}
+
+// machine actions
 
 export async function deleteMachine(id:string) {
     
@@ -262,7 +257,75 @@ export async function createMachine(prevState: StateMachine, formData: FormData)
     redirect('/dashboard/machinery');  
 }
 
-// project
+// project schemas
+
+const FormSchemaProject = z.object({
+    id: z.string(),
+    name: z.string({
+        invalid_type_error: 'Please enter a valid model name',
+    }),
+});
+
+const CreateProject = FormSchemaProject.omit({id: true});
+
+export type StateProject = {
+    errors?: {
+        name?: string[];
+    };
+    message?: string | null;
+}
+
+//project actions
+
+export async function createProject(prevState: StateProject, formData: FormData) {
+
+    const validatedFields = CreateProject.safeParse({
+        name: formData.get('name')
+    });
+
+    console.log(formData);
+    console.log(formData.getAll('supplier'));
+
+    if (!validatedFields.success) {
+        console.log("validatedFields is not successfull");
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Missing Fields. Failed to Add Machine.',
+        };
+    }
+
+    const id = v4(); 
+    const {name} = validatedFields.data;
+    const suppliers = formData.getAll('supplier');
+
+    try {
+
+        await pool.query(`BEGIN;`);
+        await pool.query(`
+            INSERT INTO projects (id, name)
+            VALUES ("${id}", "${name}");
+        `);
+        for (const supplier of suppliers) {
+            await pool.query(`
+                INSERT INTO project_supplier (project_id, supplier_id, supplier_name, project_name)
+                SELECT "${id}", s.id, "${supplier}", "${name}"
+                FROM suppliers s
+                WHERE s.name = "${supplier}";    
+            `);
+        };
+        await pool.query(`COMMIT;`); 
+    } catch (error) {
+        await pool.query(`ROLLBACK;`);
+        console.log(error);
+        return {
+            message: 'Database Error: Failed to create machine'
+        }
+    }
+
+    revalidatePath('/dashboard/machinery');
+    //revalidatePath('/dashboard/suppliers'); Let's see if we need to revalidate this path as well
+    redirect('/dashboard/machinery');  
+}
 
 export async function deleteProject(id:string) {
     
@@ -276,49 +339,4 @@ export async function deleteProject(id:string) {
     }
     
     revalidatePath('/dashboard/projects');
-}
-
-export async function createProject(prevState: StateMachine, formData: FormData) {
-
-    const validatedFields = CreateMachine.safeParse({
-        model: formData.get('model'),
-        website: formData.get('website'),
-        supplier: formData.get('owner'),
-        type: formData.get('type')
-    });
-
-    console.log(formData);
-
-    if (!validatedFields.success) {
-        console.log("validatedFields is not successfull");
-        return {
-          errors: validatedFields.error.flatten().fieldErrors,
-          message: 'Missing Fields. Failed to Add Machine.',
-        };
-        
-    }
-
-
-    const id = v4(); 
-    const { model, website, supplier, type } = validatedFields.data;
-
-    try {
-        
-        await pool.query(`
-            INSERT INTO faketable (id, model, producer_website, supplier_id, type)
-            SELECT '${id}', "${model}", "${website}", s.id , "${type}"
-            FROM suppliers s
-            WHERE s.name = "${supplier}"
-        `);
-        
-    } catch (error) {
-        console.log("db query is not successfull");
-        return {
-            message: 'Database Error: Failed to create machine'
-        }
-    }
-
-    revalidatePath('/dashboard/machinery');
-    //revalidatePath('/dashboard/suppliers'); Let's see if we need to revalidate this path as well
-    redirect('/dashboard/machinery');  
 }
