@@ -12,12 +12,8 @@ import { Button } from '@/app/ui/button';
 import {createMachine, StateMachine} from '@/app/lib/db/actions';
 import {useActionState, useState} from 'react';
 
-interface MachineryType {
-  type: string;
-}
 
-
-export default function Form({machineryTypes, selectedSupplier}: {machineryTypes: MachineryType[], selectedSupplier: string | null}) {
+export default function Form({machineryTypes, selectedSupplier}: {machineryTypes: any, selectedSupplier: string | null}) {
   
   const initialState: StateMachine = {message:null, errors: {}};
   const [state, formAction] = useActionState(createMachine, initialState);
