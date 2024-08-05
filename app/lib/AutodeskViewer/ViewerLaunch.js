@@ -1,42 +1,42 @@
 /* global Autodesk, THREE */
-import Client from '@/app/lib/AutodeskViewer/Auth.js'
 
 export default async function launchViewer(div, urn) {
 
-    var viewer;
-
-    var getToken = {accessToken: Client.getAccessToken()};
-
-    getToken.accessToken.then((token) => {
-        console.log('token', token)
-        var options = {
-            'env': "AutodeskProduction2",
-            'accessToken': token.access_token
-        };
-
-        Autodesk.Viewing.Initializer(options, function() {
-            var htmlDiv = document.getElementById(div);
-            viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv);
-
-            var startedCode = viewer.start();
-            if (startedCode > 0) {
-                console.error('Failed to create a Viewer: WebGL not supported.');
-                return;
+    async function getAccessToken(callback) {
+        try {
+            // just offset one server call away. I hate it. This is extremely stupid but let me do it this way now
+            const resp = await fetch(`/api/auth/token`);
+            if (!resp.ok) {
+                throw new Error(await resp.text());
             }
-            console.log('Initialization complete, loading a model next...');
-        });
-
-        Autodesk.Viewing.Document.load(urn, onDocumentLoadSuccess, onDocumentLoadFailure);
-
-        async function onDocumentLoadSuccess(viewerDocument) {
-            var defaultModel = viewerDocument.getRoot().getDefaultGeometry();
-            viewer.loadDocumentNode(viewerDocument, defaultModel, {}).then(console.log(viewer));
-            return viewer;
+            const { access_token, expires_in } = await resp.json();
+            callback(access_token, expires_in);
+        } catch (err) {
+            alert('Could not obtain access token. See the console for more details.');
+            console.error(err);
         }
+    }
 
-        function onDocumentLoadFailure() {
-            console.error('Failed fetching Forge manifest');
+    var htmlDiv = window.document.getElementById(div);
+
+    await Autodesk.Viewing.Initializer({ env: 'AutodeskProduction2', api: 'streamingV2', getAccessToken }, function () {
+        const config = {
+            extensions: ['Autodesk.DocumentBrowser']
         };
-    })
+        const viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv, config);
+        viewer.start();
+        viewer.setTheme('light-theme');
+    });
 
+    Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
+
+    async function onDocumentLoadSuccess(viewerDocument) {
+        var defaultModel = viewerDocument.getRoot().getDefaultGeometry();
+        viewer.loadDocumentNode(viewerDocument, defaultModel, {}).then(console.log(viewer));
+        return viewer;
+    }
+
+    function onDocumentLoadFailure() {
+        console.error('Failed fetching Forge manifest');
+    };
 }

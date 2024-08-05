@@ -1,20 +1,21 @@
 import Form from '@/app/ui/projects/create-form';
 import Breadcrumbs from '@/app/ui/projects/breadcrumbs';
-import {fetchSupplierByName} from '@/app/lib/db/data';
-import DropDown from '@/app/ui/projects/search-dropdown'
+import {fetchSupplierByName, fetchUserByName} from '@/app/lib/db/data';
 
 export default async function Page({
     searchParams,
 }:{
     searchParams?: {
         supplier?: string;
+        team?:string;
         page?: string;
     };
 }) {
     
-    const search = searchParams?.supplier || null;
-    const suppliers = await fetchSupplierByName(search);
-    console.log(suppliers);
+    const supplierSearch = searchParams?.supplier || null;
+    const teamSearch = searchParams?.team || null;
+    const suppliers = await fetchSupplierByName(supplierSearch);
+    const team = await fetchUserByName(teamSearch);
 
     return (
         <main>
@@ -26,7 +27,7 @@ export default async function Page({
                     active: true,
                 },
             ]}/>
-            <Form suppliers={suppliers}/> {/*ts complains but we will do the type gymnastics a little later*/}
+            <Form suppliers={suppliers} team={team}/> {/*ts complains but we will do the type gymnastics a little later*/}
         </main>
     )
 }

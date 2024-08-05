@@ -15,6 +15,9 @@
 # production
 /build
 
+# users
+users.js
+
 # misc
 .DS_Store
 *.pem

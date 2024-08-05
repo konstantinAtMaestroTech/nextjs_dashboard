@@ -1,7 +1,7 @@
 var credentials = {
     client: {
-        client_id: 'cJcXpNyRkMK4BkxpcfiGQJ8Eo7RkZRPG', // i think i might be passing it to the client in use client which is bad. That's why it was done on the server previously. 
-        client_secret: 'jmhsjiF6NGPAiE6l',
+        client_id: process.env.APS_CLIENT_ID, // i think i might be passing it to the client in use client which is bad. That's why it was done on the server previously. 
+        client_secret: process.env.APS_CLIENT_SECRET,
     },
 
     body: {

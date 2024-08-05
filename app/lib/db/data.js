@@ -5,7 +5,7 @@ import {SupplierForm} from '@/app/lib/db/definitions'
 
 // fetch filtered
 
-const ITEMS_PER_PAGE = 6;
+
 export async function fetchFilteredSuppliers(
   query,
   currentPage
@@ -93,6 +93,8 @@ export async function fetchFilteredProjects(
 
 // fetch pages
 
+const ITEMS_PER_PAGE = 6;
+
 export async function fetchSuppliersPages(query) {
   try {
     const [results, field] = await pool.query(`SELECT COUNT(*)
@@ -146,7 +148,27 @@ export async function fetchProjectsPages(query) {
   }
 }
 
-// else
+export async function fetchViewsPages(id) {
+  try {
+    const [results, field] = await pool.query(`
+      SELECT COUNT(*)
+      FROM
+        client_views v
+      INNER JOIN
+        project_views pv ON v.id = pv.view_id
+      WHERE
+        pv.project_id = "${id}"
+    `);
+
+    const totalPages = Math.ceil(Number(results[0]['COUNT(*)']) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of suppliers.');
+  }
+}
+
+// fetch by id
 
 export async function fetchSuppliersById(id) {
   try {
@@ -170,9 +192,44 @@ export async function fetchSuppliersById(id) {
     return result[0];
   } catch (error) {
     console.error('Database Error:', error);
+    throw new Error('Failed to fetch suppliers.');
+  }
+}
+
+export async function fetchProjectById(id) {
+  try {
+    const [result, field] = await pool.query(`
+      SELECT *
+      FROM projects
+      WHERE id = '${id}';
+    `);
+    return result;
+  } catch (error) {
+    console.error('Database Error:', error);
     throw new Error('Failed to fetch invoice.');
   }
 }
+
+export async function fetchUrnByClientViewId(id) {
+
+  try {
+    const [result, fields] = await pool.query(`
+      SELECT 
+        urn,
+        title,
+        subtitle
+      FROM client_views
+      WHERE id = '${id}';
+    `)
+    return result[0];
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to client view.');
+  }
+
+}
+
+// else
 
 export async function fetchMachineryTypes() {
   try {
@@ -203,5 +260,87 @@ export async function fetchSupplierByName(query) {
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoice.');
+  }
+}
+
+export async function fetchUserByName(query) {
+  try {
+
+    const [result, field] = await pool.query(`
+      SELECT name, id
+      FROM users
+      WHERE 
+        name LIKE '%${query}%'
+    `)
+    console.log(result);
+    return result;
+
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch invoice.');
+  }
+}
+
+// joint searches
+
+export async function fetchUsersByProjectId(id) {
+  try {
+    const [result, fields] = await pool.query(`
+      SELECT
+        u.id,
+        u.name
+      FROM
+        users u
+      INNER JOIN
+        project_user pu ON u.id = pu.user_id
+      WHERE
+        pu.project_id = "${id}" 
+    `)
+    return result;
+  } catch (error) {
+    console.error('Database Error', error);
+    return null;
+  }
+}
+
+export async function fetchSuppliersByProjectId(id) {
+  try {
+    const [result, fields] = await pool.query(`
+      SELECT
+        s.id,
+        s.name
+      FROM
+        suppliers s
+      INNER JOIN
+        project_supplier ps ON s.id = ps.supplier_id
+      WHERE
+        ps.project_id = "${id}"
+    `)
+    return result;
+  } catch (error) {
+    console.error('Database Error', error);
+    return null;
+  }
+}
+
+export async function fetchClientViewsByProjectId(id) {
+  try {
+    const [views, fields] = await pool.query(`
+      SELECT
+        v.id,
+        v.urn,
+        v.title,
+        v.subtitle
+      FROM
+        client_views v
+      INNER JOIN
+        project_views pv ON v.id = pv.view_id
+      WHERE
+        pv.project_id = "${id}"
+    `)
+    return views;
+  } catch (error) {
+    console.error('Database Error', error);
+    return null;
   }
 }

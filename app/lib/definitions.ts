@@ -9,6 +9,14 @@ export type User = {
   password: string;
 };
 
+export type User2 = {
+  id: string;
+  name: string;
+  surname: string;
+  email: string;
+  password: string;
+};
+
 export type Customer = {
   id: string;
   name: string;

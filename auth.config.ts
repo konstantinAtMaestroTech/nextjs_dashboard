@@ -11,7 +11,7 @@ export const authConfig = {
             const isOnClientPage = nextUrl.pathname.startsWith('/client');
             const isOnViewerTokenPage = nextUrl.pathname.startsWith('/pages/api/viewertoken');
             const isOnAutodeskPage = nextUrl.pathname.startsWith('/autodesk'); // temp
-
+            
             if (isOnDashboard) {
                 if (isLoggedIn) return true;
                 return false;

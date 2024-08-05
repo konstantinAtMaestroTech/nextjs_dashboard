@@ -1,30 +1,32 @@
-import credentials from '@/app/lib/AutodeskViewer/credentials';
-import axios from 'axios';
+import {pool} from '@/app/lib/db/pool';
+import {users} from '@/users';
+import {v4} from 'uuid';
+import bcrypt from 'bcrypt';
 
-export async function GET() {
-    try {
-        const response = await axios.post(credentials.Authentication, credentials.body, {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': 'application/json',
-                'Authorization': `Basic ${credentials.clientAuthKeys}`
-            }
-        });
+async function addUsers (users: any[]) {
+    for (const user of users) {
 
-        if (response.status !== 200) {
-            console.log(response);
-            throw new Error('Network response was not ok');
-        }
+        const id = v4();
+        const hashedPassword = await bcrypt.hash(user.password, 10);
 
-        const data = response.data;
-        return Response.json(data);
-
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-            console.log(error);
-            return Response.json(error.message)
-        } else {
-            return Response.json(error)
+        try {
+            await pool.query(`
+                INSERT INTO users (id, name, email, pwd)
+                VALUES ("${id}", "${user.name}", "${user.email}", "${hashedPassword}")  
+            `)
+        } catch (error) {
+            console.log(error)
         }
     }
 }
+
+/* export async function GET() {
+    try {
+        console.log('users are added');
+        await addUsers(users);
+        return Response.json({ message: 'Database seeded successfully' });
+    } catch (error) {
+
+      return Response.json({ error }, { status: 500 });
+    }
+} */

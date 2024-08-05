@@ -1,41 +1,41 @@
 'use client';
 
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import  { useSearchParams, usePathname, useRouter } from   'next/navigation';
+import  { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import {useDebouncedCallback} from 'use-debounce';
 import {useState, useEffect} from 'react';
 
-export default function Search({ placeholder}: {placeholder: string}) {
+export default function Search({ placeholder, searchParam, label}: {placeholder: string, searchParam: string, label: string}) {
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const {replace} = useRouter();
-  const [inputValue, setInputValue] = useState(searchParams.get('supplier')?.toString() || '');
+  const [inputValue, setInputValue] = useState(searchParams.get(searchParam)?.toString() || '');
 
   const handleSearch = useDebouncedCallback((term) => {
     console.log(`Searching ${term}`);
     const params = new URLSearchParams(searchParams);
     if (term) {
-      params.set('supplier', term);
+      params.set(searchParam, term);
     } else {
-      params.delete('supplier')
+      params.delete(searchParam)
     }
     replace(`${pathname}?${params.toString()}`);
   }, 300);
 
   useEffect(() => {
-    const supplier = searchParams.get('supplier');
+    const supplier = searchParams.get(searchParam);
     if (!supplier) {
       setInputValue('');
     }
   }, [searchParams]);
 
   return (
-    <div className="flex items-stretch justify-left">
+    <div className="flex items-stretch justify-left mb-4">
       <div className="w-full rounded-md bg-gray-50">
       <div className="mb-0">
             <label htmlFor="email" className="mb-2 block text-sm font-medium">
-              Search for suppliers
+              {label}
             </label>
             <div className="relative mt-2 rounded-md">
               <div className="relative">

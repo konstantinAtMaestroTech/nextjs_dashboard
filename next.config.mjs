@@ -2,6 +2,9 @@
 
 const nextConfig = {
     experimental:  {
+        serverActions: {
+            bodySizeLimit: '500mb',
+        },
         ppr: 'incremental',
     },
 };

@@ -39,9 +39,6 @@ export default async function ProjectsTable({
                 <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
                   Project name
                 </th>
-                <th scope="col" className="relative py-3 pl-6 pr-3">
-                  <span className="sr-only">Edit</span>
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -55,8 +52,6 @@ export default async function ProjectsTable({
                       <p>{project.name}</p>
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3">
-                  </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
                       <InfoProject id={project.id} />
@@ -65,7 +60,7 @@ export default async function ProjectsTable({
                     </div>
                   </td>
                 </tr>
-              ))}
+            ))}
             </tbody>
           </table>
         </div>

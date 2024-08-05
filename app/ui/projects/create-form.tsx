@@ -7,19 +7,19 @@ import {
 import { Button } from '@/app/ui/button';
 import {createProject, StateProject} from '@/app/lib/db/actions';
 import {useActionState, useState} from 'react';
-import Search from '@/app/ui/projects/search-suppliers'
+import Search from '@/app/ui/projects/search'
 import DropDown from '@/app/ui/projects/search-dropdown'
-import Selected from '@/app/ui/projects/selected-suppliers'
+import Selected from '@/app/ui/projects/selected-items'
 
-interface MachineryType {
-  type: string;
-}
 
-export default function Form({suppliers}: {suppliers: any[] | null}) {
+export default function Form({suppliers, team}: {suppliers: any[] | null, team: any[] | null}) {
 
   const initialState: StateProject = {message:null, errors: {}};
   const [state, formAction] = useActionState(createProject, initialState);
   const [selectedSuppliers, setSelectedSuppliers] = useState<any[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState<any[]>([]);
+  console.log('selected suppliers', selectedSuppliers);
+  console.log('selected team', selectedTeam);
 
   return (
     <form action={formAction}>
@@ -36,7 +36,6 @@ export default function Form({suppliers}: {suppliers: any[] | null}) {
                   id="name"
                   name="name"
                   type="text"
-                  step="0.01"
                   placeholder='Project title'
                   className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                   required
@@ -45,9 +44,12 @@ export default function Form({suppliers}: {suppliers: any[] | null}) {
               </div>
             </div>
           </div>
-          <Search placeholder='Search for the suppliers'/>
-          <DropDown query={suppliers} setSelectedSuppliers={setSelectedSuppliers}/>
-          <Selected selection={selectedSuppliers} setSelectedSuppliers={setSelectedSuppliers}/> 
+          <Search placeholder='Search for the team members' searchParam='team' label='Team'/>
+          <DropDown query={team} setSelection={setSelectedTeam} searchParam='team'/>
+          <Selected selection={selectedTeam} setSelection={setSelectedTeam} inputName='team' />
+          <Search placeholder='Search for the suppliers' searchParam='supplier' label='Suppliers'/>
+          <DropDown query={suppliers} setSelection={setSelectedSuppliers} searchParam='supplier'/>
+          <Selected selection={selectedSuppliers} setSelection={setSelectedSuppliers} inputName='supplier' /> 
         </div>
       </div>
 

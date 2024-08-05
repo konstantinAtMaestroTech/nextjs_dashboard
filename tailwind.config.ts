@@ -18,6 +18,9 @@ const config: Config = {
           600: '#2F6FEB',
         },
       },
+      clipPath: {
+        'rect': 'rect(0, 0, 0, 0)',
+      },
     },
     keyframes: {
       shimmer: {

@@ -3,6 +3,7 @@ import axios from 'axios';
 
 async function getAccessToken() {
     try {
+        console.log('credentials.client',credentials.client)
         const response = await axios.post(credentials.Authentication, credentials.body, {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -17,6 +18,7 @@ async function getAccessToken() {
         }
 
         const data = response.data;
+        console.log('data', data)
         return data;
 
     } catch (error) {

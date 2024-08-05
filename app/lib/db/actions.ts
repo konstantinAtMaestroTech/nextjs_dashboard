@@ -268,6 +268,7 @@ const FormSchemaProject = z.object({
 
 const CreateProject = FormSchemaProject.omit({id: true});
 
+
 export type StateProject = {
     errors?: {
         name?: string[];
@@ -283,9 +284,6 @@ export async function createProject(prevState: StateProject, formData: FormData)
         name: formData.get('name')
     });
 
-    console.log(formData);
-    console.log(formData.getAll('supplier'));
-
     if (!validatedFields.success) {
         console.log("validatedFields is not successfull");
         return {
@@ -297,6 +295,7 @@ export async function createProject(prevState: StateProject, formData: FormData)
     const id = v4(); 
     const {name} = validatedFields.data;
     const suppliers = formData.getAll('supplier');
+    const team = formData.getAll('team');
 
     try {
 
@@ -304,7 +303,15 @@ export async function createProject(prevState: StateProject, formData: FormData)
         await pool.query(`
             INSERT INTO projects (id, name)
             VALUES ("${id}", "${name}");
-        `);
+        `); 
+        for (const member of team) {
+            await pool.query(`
+                INSERT INTO project_user (project_id, user_id, project_name, user_name)
+                SELECT "${id}", u.id, "${name}", "${member}"
+                FROM users u
+                WHERE u.name = "${member}"; 
+            `)
+        }
         for (const supplier of suppliers) {
             await pool.query(`
                 INSERT INTO project_supplier (project_id, supplier_id, supplier_name, project_name)
@@ -322,9 +329,9 @@ export async function createProject(prevState: StateProject, formData: FormData)
         }
     }
 
-    revalidatePath('/dashboard/machinery');
+    revalidatePath('/dashboard/projects');
     //revalidatePath('/dashboard/suppliers'); Let's see if we need to revalidate this path as well
-    redirect('/dashboard/machinery');  
+    redirect('/dashboard/projects');  
 }
 
 export async function deleteProject(id:string) {
@@ -339,4 +346,13 @@ export async function deleteProject(id:string) {
     }
     
     revalidatePath('/dashboard/projects');
+}
+
+//client view action
+
+export async function deleteClientView(id:string) {
+
+    //TODO: views remove logic
+    
+    revalidatePath(`/dashboard/projects/${id}`);
 }
