@@ -1,4 +1,4 @@
-import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
+import Breadcrumbs from '@/app/ui/projects/breadcrumbs';
 import {fetchProjectById, fetchUsersByProjectId, fetchSuppliersByProjectId, fetchViewsPages} from '@/app/lib/db/data';
 import {notFound} from 'next/navigation';
 import ClientViewForm from '@/app/ui/projects/project-page/create-client-view';
