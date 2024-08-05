@@ -1,6 +1,6 @@
 import { UpdateMachine, DeleteMachine, InfoMachine } from '@/app/ui/machinery/buttons';
 import { fetchFilteredMachinery } from '@/app/lib/db/data';
-import Link from 'next/Link';
+import Link from 'next/link';
 
 export default async function MachinesTable({
   query,

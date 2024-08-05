@@ -1,6 +1,6 @@
 import { UpdateProject, DeleteProject, InfoProject } from '@/app/ui/projects/buttons';
 import { fetchFilteredProjects } from '@/app/lib/db/data';
-import Link from 'next/Link';
+import Link from 'next/link';
 
 export default async function ProjectsTable({
   query,
