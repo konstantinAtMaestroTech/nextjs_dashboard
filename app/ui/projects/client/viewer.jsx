@@ -3,7 +3,7 @@ import launchViewer from '@/app/lib/AutodeskViewer/ViewerLaunch';
 
 // Declare Autodesk as a global variable
 
-const viewerUrl = process.env.VIEWER_URL;
+const viewerUrl = process.env.NEXT_PUBLIC_VIEWER_URL;
 
 export default function Viewer({ urn }) {
 
