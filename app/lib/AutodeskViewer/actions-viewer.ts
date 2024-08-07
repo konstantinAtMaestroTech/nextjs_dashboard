@@ -108,3 +108,5 @@ export async function createClientView ( projectId: string, formData: FormData) 
     revalidatePath(`/dashboard/projects/${projectId}`); // while passing the id as a props downstream react stranfgely converts it to an object 
     redirect(`/dashboard/projects/${projectId}`);  
 }
+
+

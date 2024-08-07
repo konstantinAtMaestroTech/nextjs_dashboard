@@ -13,7 +13,7 @@ export default function Viewer({ urn }) {
             <Script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"/>
             <Script src="https://threejs.org/build/three.js"/>
             <Script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"/>
-            <div id="viewer" className="absolute w-full h-full bg-gray-50">
+            <div id="viewer" className="absolute w-full" style={{ height: 'calc(100vh - 104.5px)', top: '104.5px' }}> {/* some trickery but works. 104.5 is the height of the header of the page */}
                 <iframe 
                     src={`${viewerUrl}/#${urn}`}
                     width="100%" 
