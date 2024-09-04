@@ -18,6 +18,15 @@ export function CardSkeleton() {
   );
 }
 
+export function GenericSkeleton() {
+  return (
+    <div
+      className={`${shimmer} relative overflow-hidden rounded-xl bg-gray-100 p-2 shadow-sm`}
+    >
+    </div>
+  );
+}
+
 export function CardsSkeleton() {
   return (
     <>

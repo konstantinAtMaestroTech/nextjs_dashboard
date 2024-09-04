@@ -16,3 +16,25 @@ input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+@layer utilities {
+  .scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    border-radius: 100vh;
+    background: transparent;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 100vh;
+    border: 0px solid #d1d5db;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+}

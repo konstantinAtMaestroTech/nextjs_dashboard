@@ -1,5 +1,4 @@
 import {pool} from '@/app/lib/db/pool'
-import {SupplierForm} from '@/app/lib/db/definitions'
 
 //switch to js (no zod, no type check)
 
@@ -206,7 +205,7 @@ export async function fetchProjectById(id) {
     return result;
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch invoice.');
+    throw new Error('Failed to fetch ProjectsById.');
   }
 }
 
@@ -277,7 +276,24 @@ export async function fetchUserByName(query) {
 
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch invoice.');
+    throw new Error('Failed to fetch user');
+  }
+}
+
+export async function fetchViewsByRoomId(id) {
+  try {
+
+    const [supersets, field] = await pool.query(`
+      SELECT id, ss_title, data
+      FROM superset_view
+      WHERE
+        client_view_id = "${id}"
+    `)
+    return supersets
+
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch Supersets');
   }
 }
 
@@ -342,5 +358,20 @@ export async function fetchClientViewsByProjectId(id) {
   } catch (error) {
     console.error('Database Error', error);
     return null;
+  }
+}
+
+export async function fetchSupersetById(id) {
+  try {
+    const [superset, field] = await pool.query(`
+      SELECT client_views.urn, client_views.title, client_views.subtitle
+      FROM superset_view
+      INNER JOIN client_views ON superset_view.client_view_id = client_views.id
+      WHERE superset_view.id = "${id}";
+    `)
+    return superset[0];
+  } catch (error) {
+    console.error('Database Error', error);
+    throw new Error('Failed to fetch Supersets')
   }
 }

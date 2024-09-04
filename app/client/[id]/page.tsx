@@ -1,14 +1,39 @@
 import Image from 'next/image';
 import { fetchUrnByClientViewId } from '@/app/lib/db/data';
-import Viewer from '@/app/ui/projects/client/viewer';
-import Client from '@/app/lib/AutodeskViewer/Auth'
+import {fetchRoomChat, fetchRoomUsers} from '@/app/lib/db/data-chat';
+import {createUserRecord} from '@/app/lib/db/actions-chat';
+import {auth} from '@/auth';
+import ViewerAndChat from '@/app/ui/chat/chat-viewer-wrapper'
+import {fetchViewsByRoomId} from "@/app/lib/db/data"
 
 export default async function Page({params}:{params: {id: string}}) {
 
-    const id = params.id
+    const id = params.id // here and after id is the client view id. Client view Id = Room Id
     const {urn, title, subtitle} = await fetchUrnByClientViewId(id)
-    var getToken = {accessToken: await Client.getAccessToken()};
-    console.log('getToken from page', getToken)
+
+    /* there are two possible strategies to make the viewer and chat to communicate. 
+        the obvious one is to to wrap everything in a client component and use useState
+        to share the state. Another approach is to use search params. Let-s try the client side approach first
+    */
+
+    //server action
+    async function createUser(email, room, name) {
+        'use server'
+        await createUserRecord(email, room, name);
+    }
+    
+    const session = await auth();
+    await createUser(session.user.email, id, session.user.name);
+    const chat = await fetchRoomChat(id);
+    const users = await fetchRoomUsers(id);
+    const views = await fetchViewsByRoomId(id);
+    /* const views = await fetchRoomViews(data.room); suspended before the viewer migration*/
+    console.log('users', users);
+
+    if (!session) {
+        // logic for temporary session. Maybe to implement OAuth but to make sure that it works
+        // only for certian routes
+    }
 
     return (
         <main>
@@ -29,7 +54,7 @@ export default async function Page({params}:{params: {id: string}}) {
                     </p>
                 </div>
             </div>
-            <Viewer urn={urn}/>
+            <ViewerAndChat urn={urn} room={id} users={users} chat={chat} session={session} views={views}></ViewerAndChat>
         </main>
     );
 }

@@ -1,12 +1,11 @@
-const viewerUrl = process.env.VIEWER_URL;
+import {getPublicToken} from "@/app/lib/AutodeskViewer/services/aps" 
 
 export async function GET() {
     try {
-        const resp = await fetch(`${viewerUrl}/api/auth/token`);
-        const data = await resp.json()
-        return Response.json({data})
-    } catch (error) {
-
-      return Response.json({ error }, { status: 500 });
+        const token = await getPublicToken();
+        return Response.json(token);
+    } catch (err) {
+        console.error('Error fetching token:', err);
+        return Response.json({ error: 'Internal Server Error' });
     }
 }

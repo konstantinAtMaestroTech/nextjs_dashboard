@@ -6,7 +6,7 @@ import TitleTab from '@/app/ui/projects/project-page/title-tab';
 import SubtitleTab from '@/app/ui/projects/project-page/subtitle-tab';
 import {SuppliersTableSkeleton} from '@/app/ui/skeletons';
 import {Suspense} from 'react';
-import ViewsTable from '@/app/ui/projects/project-page/client-views-table';
+import ViewsPage from '@/app/ui/projects/project-page/client-views-page';
 import Pagination from '@/app/ui/suppliers/pagination';
 
 export default async function Page({params, searchParams}:{params: {id: string}, searchParams?: {page?: string; };}) {
@@ -39,13 +39,13 @@ export default async function Page({params, searchParams}:{params: {id: string},
                 ]}
             />
             <Suspense key={id + currentPage} fallback={<SuppliersTableSkeleton />}>
-                <ViewsTable query={id} currentPage={currentPage} />
+                <ViewsPage query={id} currentPage={currentPage} />
             </Suspense>
             <div className="mt-5 flex w-full justify-center">
                 <Pagination totalPages={totalViewsPages} />
             </div>
             <TitleTab title={'Utilities'} />
-            <SubtitleTab subtitle={'Create lient view'} />
+            <SubtitleTab subtitle={'Create client view'} />
             <ClientViewForm projectId={id}/>
         </main>
     );

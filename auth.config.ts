@@ -5,7 +5,16 @@ export const authConfig = {
         signIn: '/login'
     },
     callbacks: {
+        async jwt({ token, user }) {
+            user && (token.user = user);
+            return token
+        },
+        async session({ session, token }) {
+            session.user = token.user;
+            return session
+        },
         authorized({ auth, request: {nextUrl}}) {
+
             const isLoggedIn = !!auth?.user;
             const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
             const isOnClientPage = nextUrl.pathname.startsWith('/client');
