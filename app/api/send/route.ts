@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     console.log(senderName, receiverEmail, receiverName, projectTitle, projectSubtitle, projectURL)
     try {
         const { data, error } = await resend.emails.send({
-          from: 'no-reply@maestrotest.info',
+          from: `Maestro Mate <${process.env.EMAIL_FROM}>`,
           to: [receiverEmail],
           subject: `You have a new message waiting at ${projectTitle}|${projectSubtitle}!`,
           react: EmailTemplate({ receiverName: receiverName, senderName: senderName, projectTitle: projectTitle, projectSubtitle: projectSubtitle, projectURL: projectURL }),
