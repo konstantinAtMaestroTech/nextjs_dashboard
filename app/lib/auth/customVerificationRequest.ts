@@ -86,7 +86,7 @@ function html(params: { url: string; host: string; theme: Theme, title: any, sub
     <tr>
       <td align="center"
         style="padding: 0px 0px 10px 0px; font-size: 16px; line-height: 22px; font-family: Helvetica, Arial, sans-serif; color: #000000;">
-        <strong>OR USE <a href="http://${escapedHost}/client/${viewId}" target="_blank" style="color: ${brandColor};">THIS</a> LINK IF YOU HAVE ALREADY LOGGED IN</strong>
+        <strong>OR USE <a href="https://${escapedHost}/client/${viewId}" target="_blank" style="color: ${brandColor};">THIS</a> LINK IF YOU HAVE ALREADY LOGGED IN</strong>
       </td>
     </tr>
     <tr>
