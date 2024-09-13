@@ -237,6 +237,6 @@ export async function createUserRecord(email: string, roomid: string, name: stri
         }
         
     } catch (error) {
-        throw new Error('Failed to cerate a user record.');
+        throw new Error(error);
     }
 }
