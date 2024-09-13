@@ -1,3 +1,5 @@
+
+
 import Image from 'next/image';
 import { fetchUrnByClientViewId } from '@/app/lib/db/data';
 import {fetchRoomChat, fetchRoomUsers} from '@/app/lib/db/data-chat';
@@ -41,7 +43,6 @@ export default async function Page({params}:{params: {id: string}}) {
 
         //server action
         async function createNewUserJoined(email, room, name) {
-            'use server'
             await createUserRecord(email, room, name);
         }
         
