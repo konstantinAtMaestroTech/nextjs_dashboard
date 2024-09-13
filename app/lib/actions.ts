@@ -106,7 +106,7 @@ export async function authenticateClient(
         const id = formData.get('viewid');
 
         await createTempUser(initialState, formData)
-        await signIn('email', { email: email, redirectTo: `/client/${id}`});
+        await signIn('email', { email: email, redirectTo: `${process.env.URL}/client/${id}`});
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.type) {
