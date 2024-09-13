@@ -104,7 +104,7 @@ export async function authenticateClient(
         // please zod it at some point
         const email = formData.get('email');
         const id = formData.get('viewid');
-
+        console.log('server action redirect url',`${process.env.URL}/client/${id}`);
         await createTempUser(initialState, formData)
         await signIn('email', { email: email, redirectTo: `${process.env.URL}/client/${id}`});
     } catch (error) {
