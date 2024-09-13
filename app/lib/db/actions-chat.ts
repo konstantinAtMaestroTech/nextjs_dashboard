@@ -153,8 +153,7 @@ export async function createMessage(prevState: StateMessage | undefined, formDat
 
             const {title, subtitle} = await fetchUrnByClientViewId(roomid)
 
-            const isProduction = process.env.NODE_ENV === 'production';
-            const projectURL = isProduction ? process.env.PRODUCTION_URL : process.env.DEVELOPMENT_URL;
+            const projectURL = process.env.URL;
 
             for (const element of cred) {
 
