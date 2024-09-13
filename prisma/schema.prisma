@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DEV_DATABASE_URL")
+}
+
+model User {
+  id String @id @default(uuid()) @db.Char(36)
+  name String?
+  password String?
+  email String? @unique
+  emailVerified DateTime?
+  role String?
+  image String?
+}
+
+model NonVerifiedUser {
+  email String @id @unique
+  name String?
+  role String?
+}
+
+model VerificationToken {
+  id String @id @default(uuid()) @map("_id") @db.Char(36)
+  identifier String?
+  email String?
+  token String @unique
+  expires DateTime
+
+  @@unique([identifier, token])
+}
+
+// the foreign key constraints are missing due to the fact that as of now the RoomUser relation
+// is created at the time when the NonVerifiedUser is created (before the actual user clicks the link)
+// when I fix this we can move on to setting proper inter-table relations
+
+model RoomUser {
+  room_id String @db.Char(36)
+  user_id String @db.Char(36)
+
+  @@id([room_id, user_id])
+  @@map("rooms_users") // Mapping to the custom table name
+}

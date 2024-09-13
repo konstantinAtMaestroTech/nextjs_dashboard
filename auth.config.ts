@@ -1,9 +1,6 @@
 import type { NextAuthConfig } from 'next-auth'
 
 export const authConfig = {
-    pages: {
-        signIn: '/login'
-    },
     callbacks: {
         async jwt({ token, user }) {
             user && (token.user = user);
@@ -13,24 +10,22 @@ export const authConfig = {
             session.user = token.user;
             return session
         },
-        authorized({ auth, request: {nextUrl}}) {
+        async authorized({ auth, request: {nextUrl}}) {
 
-            const isLoggedIn = !!auth?.user;
+            const isMaestroMember = auth?.user?.role == 'MaestroTeam';
             const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-            const isOnClientPage = nextUrl.pathname.startsWith('/client');
-            const isOnViewerTokenPage = nextUrl.pathname.startsWith('/pages/api/viewertoken');
-            const isOnAutodeskPage = nextUrl.pathname.startsWith('/autodesk'); // temp
+            const isOnClient = nextUrl.pathname.startsWith('/client');
+            
+            // I would expect the Role-based authorization to happen over here. Pero i fail
+            // to use db connectors due to the incompatibility with the Edge Runtime. Additionaly
+            // the docs and forum folks suggest perform the authorization directly on the pages
             
             if (isOnDashboard) {
-                if (isLoggedIn) return true;
+                if (isMaestroMember) return true;
                 return false;
-            } else if (isOnClientPage) {
-                return true;
-            } else if(isOnViewerTokenPage) {
-                return true;
-            } else if(isOnAutodeskPage) {
-                return true;
-            } else if (isLoggedIn) {
+            } else if (isOnClient) {
+                return true
+            } else if (isMaestroMember) {
                 return Response.redirect(new URL('/dashboard', nextUrl));
             }
             return true;

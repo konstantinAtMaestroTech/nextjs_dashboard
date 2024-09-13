@@ -6,6 +6,7 @@ export async function fetchRoomChat(room_id) {
     try {
         const [result, fields] = await pool_chat.query(`
             SELECT
+                Messages.id,
                 Messages.message,
                 Messages.time_stamp,
                 Users.name,
@@ -39,6 +40,22 @@ export async function fetchRoomUsers(room_id) {
                 rooms_users
             ON
                Users.email = rooms_users.user_id
+            WHERE
+                rooms_users.room_id = "${room_id}"
+        `)
+        return result;
+    } catch(error) {
+        console.error('Database Error:', error);
+    }
+}
+
+export async function fetchRoomUserId(room_id) {
+    try {
+        const [result, fields] = await pool_chat.query(`
+            SELECT
+                user_id
+            FROM
+                rooms_users
             WHERE
                 rooms_users.room_id = "${room_id}"
         `)

@@ -356,3 +356,61 @@ export async function deleteClientView(id:string) {
     
     revalidatePath(`/dashboard/projects/${id}`);
 }
+
+// superset action
+
+const FormSchemaSuperset = z.object({
+    id: z.string(),
+    name: z.string({
+        invalid_type_error: 'Please enter a valid superset title',
+    }),
+    data: z.string({
+        invalid_type_error: 'getState() could not fetch the view',
+    }),
+    client_view_id: z.string({
+        invalid_type_error: 'Client View Id is missing',
+    })
+});
+
+const CreateSuperset = FormSchemaSuperset.omit({id: true});
+
+
+export type StateSuperset = {
+    errors?: {
+        name?: string;
+        data?: string;
+        client_view_id?: string;
+    };
+    message?: string | null;
+}
+
+export async function createSupersetView(prevState: StateProject, formData: FormData) {
+
+    const validatedFields = CreateSuperset.safeParse({
+        name: formData.get('new-superset-name'),
+        data: formData.get('new-superset-view'),
+        client_view_id: formData.get('new-superset-client-id')
+    });
+
+    if (!validatedFields.success) {
+        console.log("validatedFields is not successfull");
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Missing Fields. Failed to Add Machine.',
+        };
+    }
+
+    const {name, data, client_view_id} = validatedFields.data;
+    console.log('data', data);
+    console.log('client_view_id',client_view_id);
+
+    const id = v4(); 
+
+
+    await pool.query(`
+        INSERT INTO superset_view (id, ss_title, data, client_view_id)
+        VALUES ('${id}', '${name}','${data}', '${client_view_id}')
+    `)
+
+
+}

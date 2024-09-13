@@ -40,10 +40,6 @@ export default function ChatMessages (props) {
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [totalComments]);
-
-    useEffect(() => {
 
         const handleClick = (event) => handleMentionClick(event, viewer, views)
 
@@ -59,11 +55,28 @@ export default function ChatMessages (props) {
         };
     }, [viewer]);
 
+    useEffect(() => {
+        const messageId = window.location.hash.substring(1);
+        if (messageId) {
+            const messageElement = document.getElementById(messageId);
+            if (messageElement) {
+                messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+                messageElement.classList.add('highlighted-message');
+                setTimeout(() => {
+                    messageElement.classList.remove('highlighted-message');
+                }, 5000); // Remove highlight after 2 seconds
+                history.replaceState(null, '', ' ');
+            }
+        } else {
+            scrollToBottom();
+        }
+    }, [totalComments]);
+
     return (
         <div ref={chatContainerRef} className="p-6 flex-grow overflow-y-auto scrollbar">
             <div className="flex flex-col gap-4">
                 {totalComments.map((message, index) => (
-                    <div key={index}>
+                    <div key={index} id={message.id}>
                         <div className={clsx(
                             "flex items-center",
                             {

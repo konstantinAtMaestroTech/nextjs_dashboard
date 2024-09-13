@@ -4,6 +4,14 @@ import {z} from 'zod';
 import {pool_chat} from '@/app/lib/db/pool';
 import {v4} from 'uuid';
 import {auth} from '@/auth';
+import {JSDOM} from 'jsdom'
+import { fetchUrnByClientViewId } from '@/app/lib/db/data';
+import credentials from 'next-auth/providers/credentials';
+
+interface UserCredentials {
+    email: string;
+    name: string;
+}
 
 function createMysqlTimestamp() {
     const now = new Date();
@@ -37,8 +45,50 @@ export type StateMessage = {
     message?: string | null;
 };
 
+export async function createUser(email: string, name: string) {
+    try {
+        
+        const [result, fields] = await pool_chat.query(`
+            INSERT IGNORE INTO Users (email, name)
+            VALUES ('${email}', "${name}")
+        `);
+        
+    } catch (error) {
+        throw new Error('Failed to cerate a user.');
+    }
+}
+
 export async function createMessage(prevState: StateMessage | undefined, formData: FormData): Promise<StateMessage | undefined> {
 
+    function getCredentialsFromSpan(htmlString: string): UserCredentials[] {
+        
+        // Parse the HTML string into a DOM object
+        const dom = new JSDOM(htmlString);
+        const doc = dom.window.document;
+        
+    
+        // Find all span elements
+        const spans = doc.querySelectorAll('span');
+        const credentials: UserCredentials[] = [];
+    
+        // Check if any span has an id starting with "user_"
+        for (const span of spans) {
+            if (span.id.startsWith('user_')) {
+                // Extract and return the second part of the id
+                const parts = span.id.split('_');
+                if (parts.length > 1) {
+                    const user = {
+                        email: parts[1],
+                        name: parts[2],
+                    }
+                    credentials.push(user);
+                }
+            }
+        }
+    
+        return credentials;
+    }
+    
     const Pusher = require("pusher");
 
     const session = await auth()
@@ -85,11 +135,60 @@ export async function createMessage(prevState: StateMessage | undefined, formDat
         });
         
         await pusher.trigger(roomid, "message", {
+
+            id: id,
             message: message,
             time_stamp: timestamp,
             name: name,
             email: email
+
         });
+
+        // here we add email delivery on a mention
+
+        const cred = getCredentialsFromSpan(message);
+        console.log('credentials', cred)
+
+        if (cred.length) {
+
+            const {title, subtitle} = await fetchUrnByClientViewId(roomid)
+
+            const isProduction = process.env.NODE_ENV === 'production';
+            const projectURL = isProduction ? process.env.PRODUCTION_URL : process.env.DEVELOPMENT_URL;
+
+            for (const element of cred) {
+
+                const payload = {
+                    senderName: name,
+                    receiverEmail: element.email,
+                    receiverName: element.name,
+                    projectTitle: title,
+                    projectSubtitle: subtitle,
+                    projectURL: `${projectURL}/client/${roomid}#${id}`,
+                }
+    
+                try {
+                    const res = await fetch(`${projectURL}/api/send`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                    });
+        
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+        
+                    const responseData = await res.json();
+                    console.log('response data is,', responseData);
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                }
+            }
+
+        }
+        
 
         console.log('results are here, ', result )
         
@@ -138,6 +237,6 @@ export async function createUserRecord(email: string, roomid: string, name: stri
         }
         
     } catch (error) {
-        throw new Error('Failed to cerate a user.');
+        throw new Error('Failed to cerate a user record.');
     }
 }

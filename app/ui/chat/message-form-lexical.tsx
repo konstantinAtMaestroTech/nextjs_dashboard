@@ -20,6 +20,7 @@ import {
 } from 'lexical';
 import { UserNode, $createUserNode } from '@/app/ui/chat/lexical/nodes/UserNode';
 import {ViewNode, $createViewNode} from '@/app/ui/chat/lexical/nodes/ViewNode';
+import {ToolNode, $createToolNode} from '@/app/ui/chat/lexical/nodes/ToolNode';
 import {AutoLinkNode} from '@lexical/link'
 import {$generateHtmlFromNodes} from '@lexical/html'
 import {useState, useRef, useEffect, useLayoutEffect} from 'react';
@@ -43,12 +44,13 @@ function onError(error:Error): void {
 
 export const CONTENT_LINK_COMMAND_USER: LexicalCommand<any> = createCommand();
 export const CONTENT_LINK_COMMAND_VIEW: LexicalCommand<any> = createCommand();
+export const CONTENT_LINK_COMMAND_TOOL: LexicalCommand<any> = createCommand();
 
 
-export default function MessageFormLexical({users, views, searchQuery, setFilteredCommandLength, roomid, onShowCommand, onHideCommand, onSearchQueryChange, showCommand, setSelectedCommand, filteredCommandsLength, selectedCommand}: any): JSX.Element {
+export default function MessageFormLexical({users, views, searchQuery, setFilteredCommandLength, roomid, onShowCommand, onHideCommand, onSearchQueryChange, showCommand, setSelectedCommand, filteredCommandsLength, selectedCommand, viewer, viewerTools}: any): JSX.Element {
 
     const [text, setText] = useState('');
-    const [message, setMessage] = useState('')
+    const [message, setMessage] = useState('');
     const contentEditableRef = useRef(null);
     const submitButtonRef = useRef(null);
     const initialState: StateMessage = {message:null, errors: {}};
@@ -89,7 +91,7 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
     const initialConfig = {
         namespace: 'MessageFormLexical',
         theme,
-        nodes: [AutoLinkNode, UserNode, ViewNode],
+        nodes: [AutoLinkNode, UserNode, ViewNode, ToolNode],
         onError,
     };
 
@@ -99,22 +101,24 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
             // Read the contents of the EditorState here.
             const root = $getRoot();
             const value = root.__cachedText;
-            setText(value);
-            const htmlValue = $generateHtmlFromNodes(editor);
-            setMessage(htmlValue);
-            const atStandalone = /(^|\s)@(\s|$)/.test(value);
-            if (atStandalone) {
-                onShowCommand();
-                onSearchQueryChange('');
-            } else {
-                const atMatch = value.match(/@(\w*)$/);
-                if (atMatch) {
-                    onSearchQueryChange(atMatch[1]);
+            if (value) {
+                setText(value);
+                const htmlValue = $generateHtmlFromNodes(editor);
+                // as far as I remember i set up the html string on each change to allow real-time styling inside the chat bar
+                setMessage(htmlValue);
+                const atStandalone = /(^|\s)@(\s|$)/.test(value);
+                if (atStandalone) {
+                    onShowCommand();
+                    onSearchQueryChange('');
                 } else {
-                    onHideCommand();
-                }
+                    const atMatch = value.match(/@(\w*)$/);
+                    if (atMatch) {
+                        onSearchQueryChange(atMatch[1]);
+                    } else {
+                        onHideCommand();
+                    }
+                } 
             }
- 
         });
     }
 
@@ -208,9 +212,12 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
 
                         anchor.offset -= searchQuery.length + 1;
                         focus.offset = anchor.offset + searchQuery.length + 1;
+                        console.log('anchor right before deletion', anchor);
+                        console.log('focus right before deletion', focus);
 
                         editor.dispatchCommand(DELETE_CHARACTER_COMMAND, true);
-                        const user = $createUserNode(`@${payload.name.toString()}`, `user_${payload.name.toString()}`);
+                        // in the perfect world we need to use id's to avoid exposure of sensitive information such as emails;
+                        const user = $createUserNode(`@${payload.name.toString()}`, `user_${payload.email.toString()}_${payload.name.toString()}`);
                         const whitespace = $createTextNode(' ');
                         selection.insertNodes([user, whitespace]);
 
@@ -227,13 +234,38 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
                     if ($isRangeSelection(selection)) {
                         const {anchor, focus} = selection;
 
-                        anchor.offset -= searchQuery + 1;
+                        anchor.offset -= searchQuery.length + 1;
                         focus.offset = anchor.offset + searchQuery.length + 1;
 
                         editor.dispatchCommand(DELETE_CHARACTER_COMMAND, true);
                         const view = $createViewNode(`@${payload.ss_title.toString()}`, `view_${payload.id.toString()}`);
                         const whitespace = $createTextNode(' ');
                         selection.insertNodes([view, whitespace]);
+
+                        setSelectedCommand(0);
+                    };
+                    return true;
+                }, COMMAND_PRIORITY_NORMAL)
+        }, [editor]);
+        useEffect(()=>{
+            return editor.registerCommand(
+                CONTENT_LINK_COMMAND_TOOL,
+                (payload: any) => {
+                    const selection = $getSelection();
+                    if ($isRangeSelection(selection)) {
+                        const {anchor, focus} = selection;
+                        anchor.offset -= searchQuery.length + 1;
+                        focus.offset = anchor.offset + searchQuery.length + 1;
+                        console.log('anchor right before deletion', anchor);
+                        console.log('focus right before deletion', focus);
+                        editor.dispatchCommand(DELETE_CHARACTER_COMMAND, true);
+
+                        // get current selection. Now based on the Viewer ID but ideally must be cahnged to MaestroIDs in the future
+                        const selection_viewer = viewer.getSelection();
+                        const selString = JSON.stringify(selection_viewer);
+                        const tool = $createToolNode(`@${payload.name.toString()}`, `selection_${selString}`);
+                        const whitespace = $createTextNode(' ');
+                        selection.insertNodes([tool, whitespace]);
 
                         setSelectedCommand(0);
                     };
@@ -305,6 +337,7 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
                         searchQuery={searchQuery}
                         selectedCommand={selectedCommand}
                         setFilteredCommandLength={setFilteredCommandLength} 
+                        viewerTools={viewerTools}
                     />
                     )}
                     <div className='flex gap-2 p-3 w-full max-w-lg mx-auto bg-white'>

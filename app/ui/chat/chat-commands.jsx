@@ -1,20 +1,25 @@
 'use client'
 
-import {useMemo, useRef, useEffect} from 'react';
+import {useMemo} from 'react';
 import clsx from 'clsx'
 
 export default function ChatCommands(props) {
 
+    // OBSOLOTE
+
     const {users, views, searchQuery, selectedCommand, setFilteredCommandLength} = props; // a first test without the selected geometry and current view as available tags
+    
 
     const filteredCommands = useMemo(() => {
         let filteredUsers = users;
         let filteredViews = views;
-        if (!searchQuery) return {filteredViews, filteredUsers};
+        let filteredViewerTools = viewerTools;
+        if (!searchQuery) return {filteredViews, filteredUsers, filteredViewerTools};
         filteredViews = views.filter(view => view.ss_title.toLowerCase().includes(searchQuery.toLowerCase()));
         filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchQuery.toLowerCase()));
-        setFilteredCommandLength(filteredViews.length + filteredUsers.length)
-        return {filteredViews, filteredUsers};
+        filteredViewerTools = viewerTools.filter(tool => tool.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        setFilteredCommandLength(filteredViews.length + filteredUsers.length + filteredViewerTools.length)
+        return {filteredViews, filteredUsers, filteredViewerTools};
     }, [views, users, searchQuery]);
 
     function handleViewClick(view) {

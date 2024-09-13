@@ -37,4 +37,10 @@ input[type='number']::-webkit-outer-spin-button {
   .scrollbar::-webkit-scrollbar-thumb:hover {
     background: #6b7280;
   }
+
+  .highlighted-message {
+    outline: none;
+    border: 2px solid #ff3c00; /* Custom focus border */
+    background-color: rgba(227, 227, 227, 0.3); /* Custom background color */
+}
 }

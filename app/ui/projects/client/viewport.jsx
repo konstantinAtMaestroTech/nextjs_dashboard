@@ -2,10 +2,18 @@
 
 import { initViewer, loadModel } from '@/app/lib/AutodeskViewer/viewer';
 import React, { useEffect, useState, useRef } from 'react';
+import {ChatIcon} from '@/app/ui/projects/client/buttons/show-chat';
+import {SupersetIcon} from '@/app/ui/projects/client/buttons/show-superset';
+import {CreateSuperset} from '@/app/ui/projects/client/buttons/show-tools';
+import { useSession } from 'next-auth/react';
+
 
 const Viewport = (props) => {
 
-  const {setViewer} = props;
+  const {setViewer, urn, activeMenu, setActiveMenu} = props;
+
+  const session = useSession();
+  console.log('This is the session object from the Viewport component ', session)
 
   // Step 1: Create a ref
   const previewRef = useRef(null);
@@ -57,7 +65,7 @@ const Viewport = (props) => {
     if (previewRef.current) {
       initViewer(previewRef.current).then(viewer => {
         setViewer(viewer)
-        statusCheck(viewer, props.urn)
+        statusCheck(viewer, urn)
       });
     }
   }, []); // Empty dependency array to run only once on mount
@@ -65,28 +73,59 @@ const Viewport = (props) => {
   return (
     // Step 2: Attach the ref to the container element
     <>
-    <div id="preview" ref={previewRef} style={{ width: '100%', height: '100%' }}>
-    </div>
-    <div
-        id="overlay"
-        style={{
-          display: notification ? 'flex' : 'none',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        }}
-      >
-        {notification && (
-          <div className="notification">
-            {notification}
-          </div>
-        )}
+      <div id="preview" ref={previewRef} style={{ width: '100%', height: '100%' }}>
       </div>
+      <div
+          id="overlay"
+          style={{
+            display: notification ? 'flex' : 'none',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+        >
+          {notification && (
+            <div className="notification">
+              {notification}
+            </div>
+          )}
+        </div>
+        <div
+          id="independent-element"
+          style={{
+            position: 'absolute',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '5px',
+            top: '10px',
+            left: '10px',
+            backgroundColor: 'transparent',
+            zIndex: 1000,
+          }}
+        >
+          <ChatIcon activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
+          <SupersetIcon activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
+        </div>
+        {session?.data?.user?.role === "MaestroTeam" && (<div
+          id="independent-element"
+          style={{
+            position: 'absolute',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '5px',
+            top: '120px',
+            left: '10px',
+            backgroundColor: 'transparent',
+            zIndex: 1000,
+          }}
+        >
+          <CreateSuperset activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
+        </div>)}
     </>
   );
 };

@@ -3,7 +3,7 @@
 import {redirect} from 'next/navigation';
 import {revalidatePath} from 'next/cache';
 import {z} from 'zod';
-import {pool} from '@/app/lib/db/pool';
+import {pool, pool_chat} from '@/app/lib/db/pool';
 import {v4} from 'uuid';
 
 const viewerUrl = process.env.NEXT_PUBLIC_VIEWER_URL;
@@ -79,6 +79,7 @@ export async function createClientView ( projectId: string, formData: FormData) 
         const timestamp = new Date(); // it kept in the js native format instead of converting to the MySQL native to preserve the info regarding the timezone
         const { name, urn } = await resp.json() // returns the model object with name and urn properties
         const {title, subtitle} = validatedFieldsDatabase.data;
+        const roomName = [title,subtitle].join('_')
 
         // call for DB
         // nested try-catch is needed to rollback safely
@@ -92,6 +93,10 @@ export async function createClientView ( projectId: string, formData: FormData) 
             INSERT INTO project_views (project_id, view_id)
             VALUES ("${projectId}", "${id}");
             `)
+            await pool_chat.query(`
+                INSERT INTO Rooms (id, name)
+                VALUES (?, ?)
+            `, [id, roomName])
             await pool.query(`COMMIT;`);
         } catch (error) {
             await pool.query(`ROLLBACK;`);

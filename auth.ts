@@ -1,10 +1,13 @@
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
-import EmailProvider from 'next-auth/providers/email';
+import EmailProvider from 'next-auth/providers/nodemailer';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
-import {pool} from '@/app/lib/db/pool'
+import {pool} from '@/app/lib/db/pool';
+import {prisma} from "@/app/lib/prisma/database";
+import CustomPrismaAdapter from "@/prisma/custom-prisma-adapter";
+import {customVerificationRequest} from '@/app/lib/auth/customVerificationRequest'
 
 async function getUsers(email:string) {
   try {
@@ -16,33 +19,61 @@ async function getUsers(email:string) {
   }
 }
  
-export const { auth, signIn, signOut } = NextAuth({
-  ...authConfig,
-  providers: [
-    Credentials({
-      name: 'Maestro Auth',
-      async authorize(credentials) {
+export const { handlers: {GET, POST}, auth, signIn, signOut } = NextAuth((req) => {
 
-        const parsedCredentials = z
-          .object({ email: z.string().email(), password: z.string().min(6) })
-          .safeParse(credentials);
+  //console.log('req object');
+  //console.dir(req, { depth: null, colors: true });
 
-          if (parsedCredentials.success) {
-            const { email, password } = parsedCredentials.data;
-            const user = await getUsers(email);
-            if (!user) return null;
-            const passwordsMatch = await bcrypt.compare(password, user.pwd);
-            const sessionUser = {
-              name: user.name,
-              email: user.email,
-              provider: 'MaestroAuth'
-            };
-            if (passwordsMatch) return user; 
+  return {
+    ...authConfig,
+    adapter: CustomPrismaAdapter(prisma),
+    session: {strategy: "jwt"},
+    pages: {
+      signIn: '/login'
+    },
+    providers: [
+      Credentials({
+        name: 'Maestro Auth',
+        async authorize(credentials) {
+
+          const parsedCredentials = z
+            .object({ email: z.string().email(), password: z.string().min(6) })
+            .safeParse(credentials);
+
+            if (parsedCredentials.success) {
+              const { email, password } = parsedCredentials.data;
+              const user = await getUsers(email);
+              if (!user) return null;
+              const passwordsMatch = await bcrypt.compare(password, user.pwd);
+              const sessionUser = {
+                name: user.name,
+                email: user.email,
+                role: 'MaestroTeam'
+              };
+              if (passwordsMatch) return sessionUser; 
+            }
+
+            console.log('Invalid credentials')
+            return null;
+        },
+      }),
+      EmailProvider({
+        id: 'email',
+        name: 'email',
+        server: {
+          host: process.env.EMAIL_SERVER_HOST,
+          port: process.env.EMAIL_SERVER_PORT,
+          auth: {
+            user: process.env.EMAIL_SERVER_USER,
+            pass: process.env.EMAIL_SERVER_PASSWORD
           }
-
-          console.log('Invalid credentials')
-          return null;
-      },
-    }),
-  ],
+        },
+        from: process.env.EMAIL_FROM,
+        sendVerificationRequest(params) {
+          console.log('params for the sendVerificationRequest function',params);
+          customVerificationRequest(params);
+        }
+      })
+    ]
+  }
 });

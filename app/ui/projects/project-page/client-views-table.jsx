@@ -26,7 +26,7 @@ export default function ViewsTable(views)
             </thead>
             <tbody className="bg-white">
               {views?.map((view) => (
-                <ViewRecord view = {view} />
+                <ViewRecord key={view.id} view ={view} />
               ))}
             </tbody>
         </table>

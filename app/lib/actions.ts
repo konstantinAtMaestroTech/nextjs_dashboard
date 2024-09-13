@@ -1,112 +1,10 @@
 'use server';
 
 import {z} from 'zod';
-import {sql} from '@vercel/postgres';
-import {revalidatePath} from 'next/cache';
-import {redirect} from 'next/navigation';
 import {signIn} from '@/auth';
 import {AuthError} from 'next-auth';
+import {pool_auth} from '@/app/lib/db/pool'
 
-const FormSchema = z.object({
-    id: z.string(),
-    customerId: z.string({
-        invalid_type_error: 'Please select a customer.',
-    }),
-    amount: z.coerce.number().gt(0, {message: 'Please enter an amount greater than $0.'}),
-    status: z.enum(['pending', 'paid'], {
-        invalid_type_error: 'Please select an invoice status.',
-    }),
-    date: z.string(),
-});
-
-const CreateInvoice = FormSchema.omit({id: true, date: true});
-
-export type State = {
-    errors?: {
-        customerId?: string[];
-        amount?: string[];
-        status?: string[];
-    };
-    message?: string | null;
-};
-
-export async function createInvoice(prevState: State, formData: FormData) {
-    
-    const validatedFields = CreateInvoice.safeParse({
-        customerId: formData.get('customerId'),
-        amount: formData.get('amount'),
-        status: formData.get('status'),
-    });
-
-    if (!validatedFields.success) {
-        return {
-          errors: validatedFields.error.flatten().fieldErrors,
-          message: 'Missing Fields. Failed to Create Invoice.',
-        };
-    }
-
-    const { customerId, amount, status } = validatedFields.data;
-    const amountInCents = amount * 100;
-    const date = new Date().toISOString().split('T')[0];
-    
-    try {
-    
-        await sql`
-            INSERT INTO invoices (customer_id, amount, status, date)
-            VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-        `;
-
-    } catch (error) {
-        return {
-            message: 'Database Error: Failed to create invoice'
-        }
-    }
-
-    revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices');
-    
-}
-
-const UpdateInvoice = FormSchema.omit({ id:true, date:true});
-
-export async function updateInvoice(id:string, formData: FormData) {
-
-    const {customerId, amount, status} = UpdateInvoice.parse({
-        customerId: formData.get('customerId'),
-        amount: formData.get('amount'),
-        status: formData.get('status'),
-    });
-
-    const amountInCents = amount * 100
-
-    try {
-
-        await sql `
-        UPDATE invoices
-        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-        WHERE id = ${id}
-        `;
-
-    } catch (error) {
-
-        console.log(error);
-
-    }
-
-    revalidatePath('/dashboard/invoices');
-    redirect('/dashboard/invoices');
-}
-
-export async function deleteInvoice(id:string) {
-    
-    try {
-        await sql`DELETE FROM invoices WHERE id = ${id}`;
-    } catch (error) {
-        console.log(error)
-    }
-    
-    revalidatePath('/dashboard/invoices');
-}
 
 export async function authenticate(
     prevState: string | undefined,
@@ -114,6 +12,101 @@ export async function authenticate(
 ) {
     try {
         await signIn('credentials', formData);
+    } catch (error) {
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return 'Invalid credentials.';
+                default:
+                    return 'Something wentwrong.';
+            }
+        }
+        throw error;
+    }
+}
+
+const FormSchemaUser = z.object({
+    name: z.string({
+        invalid_type_error: 'Please enter a valid user name',
+    }),
+    email: z.string().email({message: 'Please enter a valid email'}),
+    role: z.string({
+        invalid_type_error: 'Please enter a valid role',
+    }),
+    viewid: z.string({
+        invalid_type_error: 'RoomId is missing',
+    })
+});
+
+type StateUser = {
+    errors?: {
+        name?: string[];
+        email?: string[];
+        role?: string[];
+        viewid?: string[];
+    };
+    message?: string | null;
+};
+
+const initialState: StateUser = {message:null, errors: {}};
+
+async function createTempUser(prevState: StateUser, formData: FormData) {
+    
+    const validatedFields = FormSchemaUser.safeParse({
+        name: formData.get('name'),
+        email: formData.get('email'),
+        role: formData.get('role'),
+        viewid: formData.get('viewid')
+    });
+
+    if (!validatedFields.success) {
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Missing Fields. Failed to Create Supplier.',
+        };
+    }
+
+
+    const { name, email, role, viewid } = validatedFields.data;
+
+    try {
+        
+        await pool_auth.query('BEGIN');
+
+        await pool_auth.query(`
+            INSERT IGNORE INTO NonVerifiedUser (name, email, role)
+            VALUES (?, ?, ?)
+        `, [name, email, role]);
+
+        // of course this should be assigned later when the user actually clicks the link. However i think it might 
+        // add additional coplexity and i prefer to opt to this less reasonable but faster way to proceed
+        
+        await pool_auth.query(`
+            INSERT IGNORE INTO rooms_users (room_id, user_id)
+            VALUES (?, ?)
+        `, [viewid, email]);
+
+        await pool_auth.query('COMMIT');
+        
+    } catch (error) {
+
+        await pool_auth.query('ROLLBACK');
+        throw error;
+    }
+
+}
+
+export async function authenticateClient(
+    prevState: string | undefined,
+    formData: FormData,
+) {
+    try {
+        // please zod it at some point
+        const email = formData.get('email');
+        const id = formData.get('viewid');
+
+        await createTempUser(initialState, formData)
+        await signIn('email', { email: email, redirectTo: `/client/${id}`});
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.type) {

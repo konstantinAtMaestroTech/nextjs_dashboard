@@ -4,6 +4,7 @@ import {useState} from 'react';
 import ChatMessages from '@/app/ui/chat/chat-messages';
 import RoomUsers from '@/app/ui/chat/room-users';
 import MessageFormLexical from '@/app/ui/chat/message-form-lexical';
+import clsx from 'clsx';
 
 /* const MessageForm = dynamic(() => import('@/app/ui/chat/message-form'), {
   ssr: false,
@@ -14,26 +15,34 @@ import MessageFormLexical from '@/app/ui/chat/message-form-lexical';
 
 export default function Chat(data) {
 
+    const viewerTools = [{ name :'Selection'}]; // it is defined here because of the filteredCommandsLength definition that is here as well
+
     const [showCommand, setShowCommand] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCommand, setSelectedCommand] = useState(0)
-    const [filteredCommandsLength, setFilteredCommandLength] = useState(data.users.length + data.views.length)
+    const [filteredCommandsLength, setFilteredCommandLength] = useState(data.users.length + data.views.length + viewerTools.length)
 
     console.log("lets see the views, ", data.views);
 
     const handleShowCommand = () => setShowCommand(true);
     const handleHideCommand = () => {
         setShowCommand(false);
-        setFilteredCommandLength(data.users.length + data.views.length);
+        setFilteredCommandLength(data.users.length + data.views.length + viewerTools.length);
     };
     const handleSearchQueryChange = (query) => setSearchQuery(query)
 
     return (
-        <div id='chat' className='absolute' style={{ 
-            height: 'calc(100vh - 104.5px)', 
-            top: '104.5px',
-            width: '25%',
-            left: 0
+        <div id='chat' className={clsx('absolute bg-white', {
+            'hidden': data.activeMenu !== "chat"
+        })} style={{ 
+            height: 'calc(70vh - 104.5px)', // i leave it this way as a reminder about the workaround i had to do to calculate the height of the element when it was full-width
+            maxWidth: '25%',
+            top: 10,
+            left: 56,
+            right: 0,
+            bottom: 0,
+            zIndex: 1001,
+            overflow: 'auto'
         }}
         >
             <div className='flex flex-col h-full'>
@@ -53,6 +62,7 @@ export default function Chat(data) {
                 <MessageFormLexical
                     users={data.users}
                     views={data.views}
+                    viewerTools={viewerTools}
                     searchQuery={searchQuery}
                     setFilteredCommandLength={setFilteredCommandLength} 
                     roomid={data.room} 
@@ -65,6 +75,7 @@ export default function Chat(data) {
                     onSearchQueryChange={handleSearchQueryChange}
                     setSelectedCommand={setSelectedCommand}
                     filteredCommandsLength={filteredCommandsLength}
+                    viewer={data.viewer}
                 />
                 {/* <MessageForm 
                     roomid={data.room} 

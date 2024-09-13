@@ -2,44 +2,44 @@
 
 import {useState} from 'react';
 import Link from 'next/link';
-import {DeleteClientView, ShowSupersets, CreateSuperset} from '@/app/ui/projects/project-page/buttons';
+import {DeleteClientView, ShowSupersets, CreateSuperset, InviteUser} from '@/app/ui/projects/project-page/buttons';
 
-export default function ViewRecord(view) {
+export default function ViewRecord(props) {
 
-    view = view.view // pls fix it for the love of god
-    
+    const {id, title, subtitle, supersets} = props.view // pls fix it for the love of god    
     const [show, setShow] = useState(false)
 
     return (
         <>
             <tr
-            key={view.id}
+            key={id}
             className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
             >
-            <td className="whitespace-nowrap py-3 pl-6 pr-3">
+            <td className="whitespace-normal py-3 pl-6 pr-3">
                 <div className="flex items-center gap-3">
-                    <p>{view.title}</p>
+                    <p>{title}</p>
                 </div>
             </td>
-            <td className="whitespace-nowrap py-3 pl-6 pr-3">
+            <td className="whitespace-normal py-3 pl-6 pr-3">
                 <div className="flex items-center gap-3">
-                    <p>{view.subtitle}</p>
+                    <p>{subtitle}</p>
                 </div>
             </td>
-            <td className="whitespace-nowrap py-3 pl-6 pr-3">
+            <td className="whitespace-normal py-3 pl-6 pr-3">
                 <div className="flex items-center gap-3">
-                    <Link href={`/client/${view.id}`} className="text-gray-500 hover:text-gray-700 underline">{`${view.title} | ${view.subtitle}` }</Link>
+                    <Link href={`/client/${id}`} className="text-gray-500 hover:text-gray-700 underline">{`${title} | ${subtitle}` }</Link>
                 </div>
             </td>
             <td className="whitespace-nowrap py-3 pl-6 pr-3">
                 <div className="flex justify-end gap-3">
-                    <CreateSuperset id={view.id}/>
-                    <ShowSupersets id={view.id} setShow={setShow} show={show}/>
-                    <DeleteClientView id={view.id} />
+                    <InviteUser id={id} title={title} subtitle={subtitle}/>
+                    <CreateSuperset id={id}/>
+                    <ShowSupersets id={id} setShow={setShow} show={show}/>
+                    <DeleteClientView id={id} />
                 </div>
             </td>
             </tr>
-            {view.supersets.map((superset)=>(
+            {supersets.map((superset)=>(
                 <>
                     { show ? (
                     <tr
@@ -57,7 +57,7 @@ export default function ViewRecord(view) {
                         </td>
                         <td className="whitespace-nowrap pl-6 pr-3">
                             <div className="flex justify-end gap-3">
-                                <DeleteClientView id={view.id} />
+                                <DeleteClientView id={id} />
                             </div>
                         </td>
                     </tr>
