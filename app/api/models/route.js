@@ -1,4 +1,4 @@
-import {listObjects, urnify } from "@/app/lib/services/aps"
+import {listObjects, urnify } from "@/app/lib/AutodeskViewer/services/aps"
 
 export async function GET() {
     try {
