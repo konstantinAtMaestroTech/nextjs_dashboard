@@ -6,9 +6,9 @@ import {useState} from 'react';
 import Link from 'next/link';
 import LoginFormClient from '@/app/ui/login-form-client'
 
-export function DeleteClientView({ id }: { id: string }) {
+export function DeleteClientView({ id, filename, urn }: { id: string, filename: string, urn:string }) {
 
-  const deleteClientViewWithId = deleteClientView.bind(null, id);
+  const deleteClientViewWithId = deleteClientView.bind(null, id, filename, urn);
 
   return (
     <form action={deleteClientViewWithId}>

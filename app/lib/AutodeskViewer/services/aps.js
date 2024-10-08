@@ -59,6 +59,37 @@ export async function listObjects() {
     return objects;
 };
 
+export async function deleteFile(filename) {
+
+    // deletes the bucket from the OSS. Does not delete the manifest and derivatives
+
+    const {access_token} = await getInternalToken();
+    console.log('encodeURIComponent filename', encodeURIComponent(filename));
+    console.log('encodeURI filename', encodeURI(filename));
+    
+    try {
+        let resp = await ossClient.deleteObject(access_token, APS_BUCKET, filename);
+        console.log('deleteFile resp is', resp);
+        return resp;
+
+    } catch (err) {
+        console.log('delete file error' + resp)
+    }
+}
+
+export async function deleteManifest(urn) {
+
+    const {access_token} = await getInternalToken();
+
+    try {
+        // urn is already URL-safe base64 encoded
+        let resp = await modelDerivativeClient.deleteManifest(access_token, urn);
+        console.log('deleteManifest resp is', resp);
+    } catch (error) {
+        console.log('deleteManifest resp is', resp);
+    }
+}
+
 export async function getManifest(urn) {
     const { access_token } = await getInternalToken();
     try {

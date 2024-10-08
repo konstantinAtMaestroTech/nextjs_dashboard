@@ -346,7 +346,8 @@ export async function fetchClientViewsByProjectId(id) {
         v.id,
         v.urn,
         v.title,
-        v.subtitle
+        v.subtitle,
+        v.filename
       FROM
         client_views v
       INNER JOIN

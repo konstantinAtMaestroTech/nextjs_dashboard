@@ -64,6 +64,10 @@ const ClientViewForm: React.FC<ClientViewFormProps> = ({ projectId }) => {
                         <Button>Submit the form</Button>
                     </div>         
                 </div>
+                <div className='flex flex-grow justify-center rounded-md bg-gray-50 text-[#ff0d0d] p-4 md:p-6'>
+                    <span><strong>Notice:</strong> Please ensure that for each upload, you either rename the file that you upload (i.e. example.dwg becomes example1.dwg) or delete all views based on the file across all projects (e.g., if you have created multiple project versions for testing purposes). It is essential for the system's functionality that the names of uploaded files remain unique across the entire platform. This is a temporary measure and will soon be handled automatically.
+                    </span>
+                </div>
                 <FormNotification />
             </div>
         </form>

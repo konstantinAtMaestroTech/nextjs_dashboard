@@ -6,7 +6,7 @@ import {DeleteClientView, ShowSupersets, CreateSuperset, InviteUser} from '@/app
 
 export default function ViewRecord(props) {
 
-    const {id, title, subtitle, supersets} = props.view // pls fix it for the love of god    
+    const {id, urn, title, subtitle, supersets, filename} = props.view // pls fix it for the love of god    
     const [show, setShow] = useState(false)
 
     return (
@@ -35,7 +35,7 @@ export default function ViewRecord(props) {
                     <InviteUser id={id} title={title} subtitle={subtitle}/>
                     <CreateSuperset id={id}/>
                     <ShowSupersets id={id} setShow={setShow} show={show}/>
-                    <DeleteClientView id={id} />
+                    <DeleteClientView id={id} filename={filename} urn={urn}/>
                 </div>
             </td>
             </tr>

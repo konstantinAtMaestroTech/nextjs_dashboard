@@ -3,8 +3,10 @@
 import {revalidatePath} from 'next/cache';
 import {redirect} from 'next/navigation';
 import {z} from 'zod';
-import {pool} from '@/app/lib/db/pool';
+import {pool, pool_chat, pool_auth} from '@/app/lib/db/pool';
 import {v4} from 'uuid';
+import {deleteFile, deleteManifest} from '@/app/lib/AutodeskViewer/services/aps';
+import { fetchClientViewsByProjectId } from '@/app/lib/db/data';
 
 // supplier schemas
 
@@ -335,12 +337,18 @@ export async function createProject(prevState: StateProject, formData: FormData)
 }
 
 export async function deleteProject(id:string) {
-    
+
+    const views = await fetchClientViewsByProjectId(id);
+    console.log('fetched views', views);
+
+    views?.forEach((view) => {
+        deleteClientView(view.id, view.filename, view.urn)
+    });
+
     try {
         await pool.query(`
-            DELETE FROM project_client_page WHERE project_id = '${id}';
             DELETE FROM projects WHERE id='${id}';
-            `);
+        `);
     } catch (error) {
         console.log(error)
     }
@@ -350,9 +358,37 @@ export async function deleteProject(id:string) {
 
 //client view action
 
-export async function deleteClientView(id:string) {
+export async function deleteClientView(id:string, filename:string, urn:string) {
 
     //TODO: views remove logic
+    console.log('client view deletion id ', id);
+    console.log('client view deletion filename (bucketKey)', filename)
+    console.log('urn is ', urn)
+
+    try {
+
+        // to make the file unavailable to be viewed you need to delete the file itself
+        const delFile_resp = await deleteFile(filename);
+        console.log('here is the delFile_resp ', delFile_resp);
+        // and the derivatives (which are the things that are actually being viewed)
+        const delManifest_resp = await deleteManifest(urn);
+        console.log('here is the delManifest_resp', delManifest_resp)
+        // as well as to delete the client view from internal db
+        await pool.query(`
+            DELETE FROM client_views WHERE id = '${id}';
+        `)
+        // MySQL does not support the foreign constraint reference between different db. So we have
+        // ensure data integrity on the application level (delete the coresponding room from the 
+        // maestro_chat db as well as the rooms_user record from the maestro_email_auth db)
+        await pool_chat.query(`
+            DELETE FROM Rooms WHERE id = '${id}';
+        `)
+        await pool_auth.query(`
+            DELETE FROM rooms_users WHERE room_id = '${id}';  
+        `)
+    } catch (error) {
+        console.log('error from deleteClientView', error)
+    }
     
     revalidatePath(`/dashboard/projects/${id}`);
 }
