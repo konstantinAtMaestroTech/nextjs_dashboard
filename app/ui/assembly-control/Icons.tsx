@@ -25,7 +25,7 @@ export default function Icons({activeMenu, setActiveMenu}: IconProps) {
             zIndex: 1000,
           }}
         >
-          <Scanner activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
+          {/* <Scanner activeMenu={activeMenu} setActiveMenu={setActiveMenu}/> */}
           <CreateSuperset activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
           <SupersetIcon activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
           <SupersetData activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>

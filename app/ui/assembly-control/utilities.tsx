@@ -58,7 +58,7 @@ export default function Utilities({
         <div style={{ position: 'relative', height: 'calc(100vh - 104.5px)', width: '100%' }}>
             <Viewer urn={urn} setViewer={setViewer} selectedView={selectedView}/> {/* This might be a problem if the viewer rerenders everytime the selected view is changed. Let's see */}
             <Icons activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
-            {viewer ? <Scanner activeMenu={activeMenu} setActiveMenu={setActiveMenu} views={views} viewer={viewer} setSelectedView={setSelectedView}/> : null}
+            {/* {viewer ? <Scanner activeMenu={activeMenu} setActiveMenu={setActiveMenu} views={views} viewer={viewer} setSelectedView={setSelectedView}/> : null} */}
             {viewer ? <CreateSuperset viewer={viewer} activeMenu={activeMenu} room={page_id} setViews={setViews}/> : null}
             {viewer ? <SupersetSelector views={views} viewer={viewer} activeMenu={activeMenu} selectedView={selectedView} setSelectedView={setSelectedView}/> : null}
             {viewer ? <SupersetData selectedView={selectedView} viewer={viewer} activeMenu={activeMenu} /> : null}

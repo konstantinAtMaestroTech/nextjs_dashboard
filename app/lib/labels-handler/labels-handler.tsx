@@ -51,8 +51,10 @@ export async function labelGenerator({zoneId, zoneName, viewId}: labelGeneratorP
         const newWidth = canvas.width/3;
         const newHeight = newWidth / aspectRatio;
 
+        const xImage = (3 / 4) * canvas.width - newWidth/2;
+
         // Draw the background image with preserved aspect ratio
-        ctx.drawImage(backgroundImage, x, middleLineY - newHeight, newWidth, newHeight);
+        ctx.drawImage(backgroundImage, xImage, middleLineY - newHeight, newWidth, newHeight);
     }
 
     ctx.fillText(zoneName, x, middleLineY + 3*textHeight);
