@@ -7,6 +7,9 @@ import {pool, pool_chat, pool_auth} from '@/app/lib/db/pool';
 import {v4} from 'uuid';
 import {deleteFile, deleteManifest} from '@/app/lib/AutodeskViewer/services/aps';
 import { fetchClientViewsByProjectId } from '@/app/lib/db/data';
+import { createRoom } from '@/app/lib/db/actions-chat';
+import {labelGenerator} from '@/app/lib/labels-handler/labels-handler'
+import { s3_getSignedURL_qr } from '@/app/lib/aws-s3/actions';
 
 // supplier schemas
 
@@ -266,6 +269,12 @@ const FormSchemaProject = z.object({
     name: z.string({
         invalid_type_error: 'Please enter a valid model name',
     }),
+    client: z.string({
+        invalid_type_error: 'Please enter a valid client name',
+    }),
+    address: z.string({
+        invalid_type_error: 'Please enter a valid address',
+    })
 });
 
 const CreateProject = FormSchemaProject.omit({id: true});
@@ -274,6 +283,8 @@ const CreateProject = FormSchemaProject.omit({id: true});
 export type StateProject = {
     errors?: {
         name?: string[];
+        client?: string;
+        address?: string;
     };
     message?: string | null;
 }
@@ -283,29 +294,32 @@ export type StateProject = {
 export async function createProject(prevState: StateProject, formData: FormData) {
 
     const validatedFields = CreateProject.safeParse({
-        name: formData.get('name')
+        name: formData.get('name'),
+        client: formData.get('client'),
+        address: formData.get('address')
     });
 
     if (!validatedFields.success) {
         console.log("validatedFields is not successfull");
         return {
           errors: validatedFields.error.flatten().fieldErrors,
-          message: 'Missing Fields. Failed to Add Machine.',
+          message: 'Missing Fields. Failed to Add Project.',
         };
     }
 
     const id = v4(); 
-    const {name} = validatedFields.data;
+    const {name, client, address} = validatedFields.data;
     const suppliers = formData.getAll('supplier');
-    const team = formData.getAll('team');
+    const team = formData.getAll('team'); // this is bad because it is name based.
 
     try {
 
         await pool.query(`BEGIN;`);
         await pool.query(`
-            INSERT INTO projects (id, name)
-            VALUES ("${id}", "${name}");
+            INSERT INTO projects (id, name, client, address)
+            VALUES ("${id}", "${name}", "${client}", "${address}");
         `); 
+        await createRoom(id, name);
         for (const member of team) {
             await pool.query(`
                 INSERT INTO project_user (project_id, user_id, project_name, user_name)
@@ -313,11 +327,17 @@ export async function createProject(prevState: StateProject, formData: FormData)
                 FROM users u
                 WHERE u.name = "${member}"; 
             `)
+            await pool_chat.query(`
+                INSERT INTO rooms_users (room_id, user_id)
+                SELECT "${id}", u.email
+                FROM Users u
+                WHERE u.name = "${member}";
+            `)
         }
         for (const supplier of suppliers) {
             await pool.query(`
-                INSERT INTO project_supplier (project_id, supplier_id, supplier_name, project_name)
-                SELECT "${id}", s.id, "${supplier}", "${name}"
+                INSERT INTO project_supplier (project_id, supplier_id, supplier_status)
+                SELECT "${id}", s.id, "Idle"
                 FROM suppliers s
                 WHERE s.name = "${supplier}";    
             `);
@@ -348,6 +368,9 @@ export async function deleteProject(id:string) {
     try {
         await pool.query(`
             DELETE FROM projects WHERE id='${id}';
+        `);
+        await pool_chat.query(`
+            DELETE FROM Rooms WHERE id='${id}';    
         `);
     } catch (error) {
         console.log(error)
@@ -408,24 +431,23 @@ const FormSchemaSuperset = z.object({
     })
 });
 
-const CreateSuperset = FormSchemaSuperset.omit({id: true});
-
-
 export type StateSuperset = {
     errors?: {
         name?: string;
         data?: string;
         client_view_id?: string;
+        id?: string;
     };
     message?: string | null;
 }
 
 export async function createSupersetView(prevState: StateProject, formData: FormData) {
 
-    const validatedFields = CreateSuperset.safeParse({
+    const validatedFields = FormSchemaSuperset.safeParse({
         name: formData.get('new-superset-name'),
         data: formData.get('new-superset-view'),
-        client_view_id: formData.get('new-superset-client-id')
+        client_view_id: formData.get('new-superset-client-id'),
+        id: formData.get('new-superset-id'),
     });
 
     if (!validatedFields.success) {
@@ -436,17 +458,28 @@ export async function createSupersetView(prevState: StateProject, formData: Form
         };
     }
 
-    const {name, data, client_view_id} = validatedFields.data;
-    console.log('data', data);
-    console.log('client_view_id',client_view_id);
-
-    const id = v4(); 
-
+    const {name, data, client_view_id, id} = validatedFields.data;
 
     await pool.query(`
         INSERT INTO superset_view (id, ss_title, data, client_view_id)
         VALUES ('${id}', '${name}','${data}', '${client_view_id}')
     `)
 
+    const labelArray = await labelGenerator({zoneId: id, zoneName: name, viewId: client_view_id});
+    const label_signedUrl = await s3_getSignedURL_qr(client_view_id, id);
 
+    if (label_signedUrl.failure !== undefined) {
+        console.error("Couldn't obtain a signd url for the maestro bucket");
+        return
+    }
+
+    const url = label_signedUrl.success?.url;
+
+    await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'text/plain'
+        },
+        body: labelArray
+    });
 }

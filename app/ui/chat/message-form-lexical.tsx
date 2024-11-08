@@ -21,7 +21,6 @@ import {
 import { UserNode, $createUserNode } from '@/app/ui/chat/lexical/nodes/UserNode';
 import {ViewNode, $createViewNode} from '@/app/ui/chat/lexical/nodes/ViewNode';
 import {ToolNode, $createToolNode} from '@/app/ui/chat/lexical/nodes/ToolNode';
-import {AutoLinkNode} from '@lexical/link'
 import {$generateHtmlFromNodes} from '@lexical/html'
 import {useState, useRef, useEffect, useLayoutEffect} from 'react';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext'
@@ -91,7 +90,7 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
     const initialConfig = {
         namespace: 'MessageFormLexical',
         theme,
-        nodes: [AutoLinkNode, UserNode, ViewNode, ToolNode],
+        nodes: [UserNode, ViewNode, ToolNode],
         onError,
     };
 
@@ -141,11 +140,8 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
                     if (showCommand) {
                         e.preventDefault();
                         setSelectedCommand((prevIndex) => {
-                            console.log('prevIndex, ', prevIndex);
-                            console.log('filteredCommandsLength, ', filteredCommandsLength)
                             const newIndex = (prevIndex + 1) % (filteredCommandsLength)
                             scrollToCommand(newIndex);
-                            console.log('ArrowDown is handled, ', newIndex)
                             return newIndex;
                         });
                     }
@@ -153,11 +149,8 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
                     if (showCommand) {
                         e.preventDefault()
                         setSelectedCommand((prevIndex) => {
-                            console.log('prevIndex, ', prevIndex);
-                            console.log('filteredCommandsLength, ', filteredCommandsLength);
                             const newIndex = (prevIndex - 1 + (filteredCommandsLength)) % (filteredCommandsLength)
                             scrollToCommand(newIndex);
-                            console.log('ArrowUp is handled, ', newIndex)
                             return newIndex;
                         });
                     }
@@ -182,7 +175,7 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
                     }
                     return true;
                   } else {
-                    submitButtonRef.current.click();
+                    submitButtonRef.current.click(); // change to getElementById to get rid of submitButtonRef
                     return true;
                   }
                 } else if (payload.key === 'Enter' && payload.shiftKey) {
@@ -290,6 +283,13 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
                     hidden
                     readOnly
                 />
+                <input 
+                    type="text"
+                    name="sender"
+                    value="cview"
+                    hidden
+                    readOnly
+                />
                 <input
                     type="text"
                     name="message"
@@ -344,7 +344,7 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
                         <RichTextPlugin 
                             contentEditable={<ContentEditable
                                 ref={contentEditableRef} 
-                                className="flex-frow-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
+                                className="flex-grow-1 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
                                 style={{ minHeight: '2.5rem', maxHeight: '10rem', lineHeight: '1.25rem' }}
                                 />}
                             ErrorBoundary={LexicalErrorBoundary}
@@ -355,7 +355,6 @@ export default function MessageFormLexical({users, views, searchQuery, setFilter
                 <HistoryPlugin />
                 <OnChangePlugin onChange={onChange} />
                 <AddContentLinkPlugin />
-                {/* <AutoLinkPlugin matchers={MATCHERS} /> */}
                 <KeyHandlerPlugin />
             </LexicalComposer>
         </div>

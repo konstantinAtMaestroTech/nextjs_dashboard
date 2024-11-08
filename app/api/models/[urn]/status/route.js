@@ -22,6 +22,7 @@ export async function GET(req, {params}) {
                 }
 
                 return Response.json({ 
+                    url: manifest.derivatives[0].children[0].children[0].urn, // for now I just hardcoded it. Must be tested om an rvt model with multiple derivatives
                     status: manifest.status, 
                     progress: manifest.progress, 
                     messages 

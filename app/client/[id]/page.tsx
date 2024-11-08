@@ -1,5 +1,3 @@
-
-
 import Image from 'next/image';
 import { fetchUrnByClientViewId } from '@/app/lib/db/data';
 import {fetchRoomChat, fetchRoomUsers} from '@/app/lib/db/data-chat';
@@ -15,8 +13,6 @@ export default async function Page({params}:{params: {id: string}}) {
     const id = params.id // here and after id is the client view id. Client view Id = Room Id
 
     const session = await auth();
-
-    console.log('roomId is ', id);
 
     const usersAllowed = await fetchRoomUserId(id);
 

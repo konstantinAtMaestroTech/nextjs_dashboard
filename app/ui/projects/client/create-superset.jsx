@@ -1,9 +1,10 @@
 import {handleMentionClick} from '@/app/lib/AutodeskViewer/ViewerAPI/chatCalls';
 import clsx from 'clsx';
 import {createSupersetView} from '@/app/lib/db/actions';
+import {v4} from 'uuid';
 import {useState, useActionState} from 'react';
 
-export default function CreateSuperset({ viewer, activeMenu, room}) {
+export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
 
     const [viewerState, setViewerState] = useState('');
     const initialState = {message:null, errors: {}};
@@ -12,20 +13,33 @@ export default function CreateSuperset({ viewer, activeMenu, room}) {
     const handleSubmit = (event) => {
         event.preventDefault();
 
-        let view = {
+        let viewState = {
             state: viewer.getState()
         };
-        const viewStringified = JSON.stringify(view);
+        const id = v4(); 
+
+        const viewStringified = JSON.stringify(viewState);
         setViewerState(viewStringified);
 
         const formData = new FormData();
         formData.append('new-superset-name', event.target['new-superset-name'].value);
         formData.append('new-superset-view', viewStringified);
         formData.append('new-superset-client-id', room);
+        formData.append('new-superset-id', id);
 
         formAction(formData);
 
         document.getElementById("create-superset-form").reset();
+
+        const view = {
+            id: id,
+            ss_title: event.target['new-superset-name'].value,
+            data: {
+                state: viewer.getState()
+            }
+        }
+
+        setViews((prevState) => [...prevState, view])
     };
 
     return (

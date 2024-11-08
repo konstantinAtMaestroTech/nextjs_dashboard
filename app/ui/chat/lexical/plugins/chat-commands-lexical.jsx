@@ -16,8 +16,6 @@ export default function ChatCommandsPlugin(props) {
         filteredViewerTools: viewerTools
     })
 
-    console.log('RERENDER IS FIRED! the filteredCommands object is cosi', filteredCommands);
-
     useEffect(() => {
         if (!searchQuery) return;
         let f_Views = views.filter(view => view.ss_title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -29,7 +27,6 @@ export default function ChatCommandsPlugin(props) {
             filteredViewerTools: f_viewerTools
         });
         setFilteredCommandLength(f_Views.length + f_Users.length + f_viewerTools.length);
-        console.log('filteredCommands from useEffect hook',filteredCommands)
         return;
     }, [searchQuery]);
 

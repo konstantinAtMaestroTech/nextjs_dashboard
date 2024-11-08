@@ -5,8 +5,7 @@ import {pool_chat} from '@/app/lib/db/pool';
 import {v4} from 'uuid';
 import {auth} from '@/auth';
 import {JSDOM} from 'jsdom'
-import { fetchUrnByClientViewId } from '@/app/lib/db/data';
-import credentials from 'next-auth/providers/credentials';
+import { fetchProjectById, fetchUrnByClientViewId } from '@/app/lib/db/data';
 
 interface UserCredentials {
     email: string;
@@ -14,6 +13,7 @@ interface UserCredentials {
 }
 
 function createMysqlTimestamp() {
+
     const now = new Date();
     
     const year = now.getFullYear();
@@ -54,9 +54,32 @@ export async function createUser(email: string, name: string) {
         `);
         
     } catch (error) {
-        throw new Error('Failed to cerate a user.');
+        throw new Error('Failed to cerate a user.'); // :)
     }
 }
+
+export async function createRoom(id:string, name:string) {
+    try {
+
+        const message_id = v4();
+        const timestamp = createMysqlTimestamp();
+
+        await pool_chat.query(`
+            INSERT INTO Rooms (id, name)
+            VALUES (?, ?)
+        `, [id, name]);
+        await pool_chat.query(`
+            INSERT INTO Messages (id, message, time_stamp, user_id, room_id)
+            VALUES ('${message_id}', "The chat room ${name} has been successfully created", "${timestamp}", "admin@maestro-tech.com", "${id}")
+        `);
+
+    } catch (error) {
+
+        console.log('Failed to create the chat room', error);
+
+    }
+}
+
 
 export async function createMessage(prevState: StateMessage | undefined, formData: FormData): Promise<StateMessage | undefined> {
 
@@ -112,6 +135,7 @@ export async function createMessage(prevState: StateMessage | undefined, formDat
     const email = session?.user?.email;
     const name = session?.user?.name;
     const roomid = formData.get('room_id');
+    const sender = formData.get('sender');
 
     console.log('Message server-side, ', message);
 
@@ -147,45 +171,83 @@ export async function createMessage(prevState: StateMessage | undefined, formDat
         // here we add email delivery on a mention
 
         const cred = getCredentialsFromSpan(message);
-        console.log('credentials', cred)
 
         if (cred.length) {
 
-            const {title, subtitle} = await fetchUrnByClientViewId(roomid)
-
             const projectURL = process.env.URL;
 
-            for (const element of cred) {
+            switch (sender) {
+                case "cview":
+                    const {title, subtitle} = await fetchUrnByClientViewId(roomid) // this is for the client view case only
 
-                const payload = {
-                    senderName: name,
-                    receiverEmail: element.email,
-                    receiverName: element.name,
-                    projectTitle: title,
-                    projectSubtitle: subtitle,
-                    projectURL: `${projectURL}/client/${roomid}#${id}`,
-                }
-    
-                try {
-                    const res = await fetch(`${projectURL}/api/send`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(payload),
-                    });
-        
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
+                    for (const element of cred) {
+
+                        const payload = {
+                            senderName: name,
+                            receiverEmail: element.email,
+                            receiverName: element.name,
+                            projectTitle: title,
+                            projectSubtitle: subtitle,
+                            projectURL: `${projectURL}/client/${roomid}#${id}`,
+                        }
+            
+                        try {
+                            const res = await fetch(`${projectURL}/api/send`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Maestro-Sender': 'cview'
+                                },
+                                body: JSON.stringify(payload),
+                            });
+                
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                
+                            const responseData = await res.json();
+                            console.log('response data is,', responseData);
+                        } catch (error) {
+                            console.error('Fetch error:', error);
+                        }
                     }
-        
-                    const responseData = await res.json();
-                    console.log('response data is,', responseData);
-                } catch (error) {
-                    console.error('Fetch error:', error);
-                }
-            }
+                    break;
+                case "project":
 
+                    const project = await fetchProjectById(roomid)
+
+                    for (const element of cred) {
+                        const payload = {
+                            senderName: name,
+                            receiverEmail: element.email,
+                            receiverName: element.name,
+                            project: project[0].name,
+                            projectURL: `${projectURL}/dashboard/projects/${roomid}#${id}`
+                        }
+
+                        try {
+                            const res = await fetch(`${projectURL}/api/send`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Maestro-Sender': 'project'
+                                },
+                                body: JSON.stringify(payload),
+                            });
+                
+                            if (!res.ok) {
+                                throw new Error(`HTTP error! status: ${res.status}`);
+                            }
+                
+                            const responseData = await res.json();
+                            console.log('response data is,', responseData);
+                        } catch (error) {
+                            console.error('Fetch error:', error);
+                        }
+                    }    
+                    break;
+                default:
+            }
         }
         
 
@@ -239,3 +301,5 @@ export async function createUserRecord(email: string, roomid: string, name: stri
         throw new Error(error);
     }
 }
+
+

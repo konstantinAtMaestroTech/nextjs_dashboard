@@ -10,6 +10,7 @@ const nextConfig = {
     typescript: {
         ignoreBuildErrors: true, // this is a bad practice again
     },
+    reactStrictMode: false
 };
 
 export default nextConfig;
