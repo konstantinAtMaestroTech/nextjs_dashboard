@@ -49,7 +49,7 @@ export default function SupersetData({selectedView, viewer, activeMenu}: Superse
         };
         fetchDbidProps();
         setOpenSublist({});
-    },[selectedView]);
+    },[selectedView, activeMenu]);
 
     const selectAll = (dbids: number[]) => {
         viewer.select(dbids);
