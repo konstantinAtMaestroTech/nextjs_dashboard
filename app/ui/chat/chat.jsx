@@ -48,17 +48,6 @@ export default function Chat(data) {
             <div className='flex flex-col h-full'>
                 <RoomUsers users={data.users} />
                 <ChatMessages chat={data.chat} roomid={data.room} activeUser={data.session.user.email} viewer={data.viewer} views={data.views}/>
-                {/* {showCommand && (
-                    <div className="">
-                        <ChatCommands 
-                            users={data.users} 
-                            views={data.views}
-                            searchQuery={searchQuery}
-                            selectedCommand={selectedCommand}
-                            setFilteredCommandLength={setFilteredCommandLength}    
-                        />
-                    </div>
-                )} */}
                 <MessageFormLexical
                     users={data.users}
                     views={data.views}
@@ -77,17 +66,6 @@ export default function Chat(data) {
                     filteredCommandsLength={filteredCommandsLength}
                     viewer={data.viewer}
                 />
-                {/* <MessageForm 
-                    roomid={data.room} 
-                    email={data.session.user.email}
-                    name={data.session.user.name} 
-                    onHideCommand={handleHideCommand}
-                    showCommand={showCommand} 
-                    onShowCommand={handleShowCommand}
-                    onSearchQueryChange={handleSearchQueryChange}
-                    setSelectedCommand={setSelectedCommand}
-                    filteredCommandsLength={filteredCommandsLength}
-                /> */}
             </div>
         </div>
     );

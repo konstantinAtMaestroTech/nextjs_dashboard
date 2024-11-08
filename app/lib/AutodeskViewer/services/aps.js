@@ -1,7 +1,7 @@
 const { SdkManagerBuilder } = require('@aps_sdk/autodesk-sdkmanager');
 const { AuthenticationClient, Scopes } = require('@aps_sdk/authentication');
 const { OssClient, CreateBucketsPayloadPolicyKeyEnum, CreateBucketXAdsRegionEnum } = require('@aps_sdk/oss');
-const { ModelDerivativeClient } = require('@aps_sdk/model-derivative');
+const {ModelDerivativeClient, View, OutputType} = require('@aps_sdk/model-derivative');
 
 const sdk = SdkManagerBuilder.create().build();
 const authenticationClient = new AuthenticationClient(sdk);
@@ -59,6 +59,33 @@ export async function listObjects() {
     return objects;
 };
 
+export async function uploadObject(objectName, filePath) {
+    await ensureBucketExists(APS_BUCKET);
+    const {access_token} = await getInternalToken();
+    const obj = await ossClient.upload(APS_BUCKET, objectName, filePath, access_token);
+    return obj;
+}
+
+export async function translateObject(urn, rootFilename) {
+    const { access_token } = await getInternalToken();
+    console.log('we are inside the tranlation job')
+    const job = await modelDerivativeClient.startJob(access_token, {
+        input: {
+            urn,
+            compressedUrn: !!rootFilename,
+            rootFilename
+        },
+        output: {
+            formats: [{
+                views: [View._2d, View._3d],
+                type: OutputType.Svf
+            }]
+        }
+    });
+    console.log('translation job is done', job.result)
+    return job.result;
+}
+
 export async function deleteFile(filename) {
 
     // deletes the bucket from the OSS. Does not delete the manifest and derivatives
@@ -93,6 +120,7 @@ export async function deleteManifest(urn) {
 export async function getManifest(urn) {
     const { access_token } = await getInternalToken();
     try {
+        console.log('Here is the urn from getManifest', urn)
         const manifest = await modelDerivativeClient.getManifest(access_token, urn);
         return manifest;
     } catch (err) {
@@ -104,4 +132,4 @@ export async function getManifest(urn) {
     }
 };
 
-export function urnify(id) {Buffer.from(id).toString('base64').replace(/=/g, '')};
+export function urnify(id) {return Buffer.from(id).toString('base64').replace(/=/g, '')};

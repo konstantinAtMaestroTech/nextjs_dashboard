@@ -39,6 +39,8 @@ export default function ChatMessages (props) {
         messageEndRef.current?.scrollIntoView({ behavior: "smooth"});
     };
 
+    // client view specific effect (set the superset view, and set @selection)
+
     useEffect(() => {
 
         const handleClick = (event) => handleMentionClick(event, viewer, views)
