@@ -8,6 +8,7 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
 
     const [viewerState, setViewerState] = useState('');
     const initialState = {message:null, errors: {}};
+    const [supersetName, setSupersetName] = useState('');
     const [state, formAction] = useActionState(createSupersetView, initialState);
 
     const handleSubmit = (event) => {
@@ -22,7 +23,7 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
         setViewerState(viewStringified);
 
         const formData = new FormData();
-        formData.append('new-superset-name', event.target['new-superset-name'].value);
+        formData.append('new-superset-name', supersetName);
         formData.append('new-superset-view', viewStringified);
         formData.append('new-superset-client-id', room);
         formData.append('new-superset-id', id);
@@ -33,12 +34,13 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
 
         const view = {
             id: id,
-            ss_title: event.target['new-superset-name'].value,
+            ss_title: supersetName,
             data: {
                 state: viewer.getState()
             }
-        }
+        };
 
+        setSupersetName("");
         setViews((prevState) => [...prevState, view])
     };
 
@@ -77,6 +79,8 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
                                 }}
                                 name='new-superset-name'
                                 placeholder='Type the superset name'
+                                value={supersetName}
+                                onChange={(e) => setSupersetName(e.target.value)}
                                 required
                             />
                             <input 
