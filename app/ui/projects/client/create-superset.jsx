@@ -1,4 +1,3 @@
-import {handleMentionClick} from '@/app/lib/AutodeskViewer/ViewerAPI/chatCalls';
 import clsx from 'clsx';
 import {createSupersetView} from '@/app/lib/db/actions';
 import {v4} from 'uuid';
@@ -46,9 +45,9 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
 
     return (
         <form
-                action={formAction}
-                onSubmit={handleSubmit}
-                id='create-superset-form'
+            action={formAction}
+            onSubmit={handleSubmit}
+            id='create-superset-form'
         >
             <div id='superset' className={clsx('absolute bg-white', {
                 'hidden': activeMenu !== "create-superset"
@@ -56,7 +55,8 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
                 left: 56,
                 top: 10,
                 zIndex: 1001, 
-                overflow: 'auto'
+                overflow: 'auto',
+                maxWidth: '300px', // Set the maximum width
             }}
             >
                 <div className='flex flex-col'>
@@ -67,6 +67,12 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
                     </div>
                     <div className="flex overflow-y-auto scrollbar">
                         <div className="flex-grow flex-col gap-1">
+                            <div className="p-2 break-words text-center">
+                                {`Note: Once the Superset View is ready, please select all 
+                                elements remaining on the screen. Right-click and choose the 
+                                "Isolate" option. This will ensure an accurate quantity
+                                breakdown.`}
+                            </div>
                             <input 
                                 type="text"
                                 className="w-full p-4 self-start bg-white"
@@ -87,12 +93,14 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
                                 type='text'
                                 name='new-superset-view'
                                 value={viewerState}
+                                readOnly
                                 hidden
                             />
                             <input 
                                 type='text'
                                 name='new-superset-client-id'
                                 value={room}
+                                readOnly
                                 hidden
                             />
                         </div>

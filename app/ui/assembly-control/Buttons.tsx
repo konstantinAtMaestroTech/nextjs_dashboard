@@ -1,4 +1,4 @@
-import {QrCodeIcon, TableCellsIcon} from '@heroicons/react/24/outline';
+import {QrCodeIcon, TableCellsIcon, CursorArrowRaysIcon} from '@heroicons/react/24/outline';
 import { IconProps } from './Icons';
 import clsx from 'clsx';
 
@@ -37,6 +37,25 @@ export function SupersetData({ activeMenu, setActiveMenu }: IconProps) {
             <TableCellsIcon className={clsx("w-5", {
                 'text-white': activeMenu === "superset-data",
                 'text-black': activeMenu !== "superset-data"
+            })} />
+        </button>
+    );
+}
+
+export function StatusController({ activeMenu, setActiveMenu }: IconProps) {
+
+    const handleClick = () => {
+        activeMenu === "status-controller" ? setActiveMenu(undefined) : setActiveMenu("status-controller")
+    }
+
+    return (
+        <button className={clsx("rounded-md border p-2 shadow-lg",{
+           'bg-[rgba(255,60,0)]': activeMenu === "status-controller",
+           'bg-white': activeMenu !== "status-controller"
+        })} onClick={handleClick}>
+            <CursorArrowRaysIcon className={clsx("w-5", {
+                'text-white': activeMenu === "status-controller",
+                'text-black': activeMenu !== "status-controller"
             })} />
         </button>
     );

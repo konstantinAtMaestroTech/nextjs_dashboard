@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { fetchUrnByClientViewId, fetchViewsByRoomId } from '@/app/lib/db/data';
+import { fetchUrnByClientViewId, fetchViewsByRoomId, fetchGeometryStatusByClientViewId, GeometryDataParsed } from '@/app/lib/db/data';
 import {auth} from '@/auth';
 import Utilities from '@/app/ui/assembly-control/utilities'
 
@@ -10,6 +10,19 @@ export default async function Page({params}: {params: {id: string}}): Promise<JS
 
     const {urn, title, subtitle} = await fetchUrnByClientViewId(id);
     const viewsFetched = await fetchViewsByRoomId(id) as any[];
+    const geometry_data_raw = await fetchGeometryStatusByClientViewId(id);
+    let geometry_data: GeometryDataParsed
+
+    if (geometry_data_raw) {
+
+        const parsedGeometryState = JSON.parse(geometry_data_raw.geometry_state)
+        geometry_data = parsedGeometryState;
+
+    } else {
+        geometry_data = {
+            geometry_state: {}
+        };
+    }
 
     return (
         <main>
@@ -30,7 +43,8 @@ export default async function Page({params}: {params: {id: string}}): Promise<JS
                     </p>
                 </div>
             </div>
-            <Utilities urn={urn} viewsFetched={viewsFetched} page_id={id}/>
+            <Utilities session={session} urn={urn} viewsFetched={viewsFetched} page_id={id} geometry_data={geometry_data}/>
         </main>
     );
+
 }
