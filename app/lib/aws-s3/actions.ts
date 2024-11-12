@@ -1,7 +1,7 @@
 "use server"
 
 import {auth} from "@/auth";
-import {S3Client, PutObjectCommand, GetObjectCommand} from "@aws-sdk/client-s3";
+import {S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand} from "@aws-sdk/client-s3";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 const s3 = new S3Client({
@@ -112,4 +112,24 @@ export async function s3_get_label(clientViewId: string, supersetId: string) {
     const data = res.Body?.transformToByteArray()
 
     return data
+}
+
+export async function s3_delete_label(clientViewId: string, supersetId: string) {
+
+    const session = await auth();
+
+    if (!session) {
+        return {failure: "Not authenticated"}
+    }
+
+    console.log('The specified key is ', `${clientViewId}/qr-zones/${supersetId}.pdf`);
+
+    const delObjCmd = new GetObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME!,
+        Key: `${clientViewId}/qr-zones/${supersetId}.pdf`
+    })
+
+    const res = await s3.send(delObjCmd);
+
+    return res
 }

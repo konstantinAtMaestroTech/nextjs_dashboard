@@ -1,16 +1,23 @@
 'use client'
 
 import { Dispatch, SetStateAction } from 'react';
-import {Scanner, SupersetData} from '@/app/ui/assembly-control/Buttons';
+import {SupersetData, StatusController} from '@/app/ui/assembly-control/Buttons';
 import {SupersetIcon} from '@/app/ui/projects/client/buttons/show-superset';
-import {CreateSuperset} from '@/app/ui/projects/client/buttons/show-tools'
+import {CreateSuperset} from '@/app/ui/projects/client/buttons/show-tools';
+import { Session } from 'next-auth';
 
 export interface IconProps {
     activeMenu: string | undefined;
-    setActiveMenu: Dispatch<SetStateAction<string | undefined>>
+    setActiveMenu: Dispatch<SetStateAction<string | undefined>>;
 }
 
-export default function Icons({activeMenu, setActiveMenu}: IconProps) {
+export interface IconsProps {
+  activeMenu: string | undefined;
+  setActiveMenu: Dispatch<SetStateAction<string | undefined>>;
+  session: Session | null
+}
+
+export default function Icons({activeMenu, setActiveMenu, session}: IconsProps) {
     return (
         <div
           id="independent-element"
@@ -26,9 +33,10 @@ export default function Icons({activeMenu, setActiveMenu}: IconProps) {
           }}
         >
           {/* <Scanner activeMenu={activeMenu} setActiveMenu={setActiveMenu}/> */}
-          <CreateSuperset activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
+          {session && <CreateSuperset activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>}
           <SupersetIcon activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
           <SupersetData activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
+          {session && <StatusController activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>}
         </div>
     )
 }

@@ -310,6 +310,34 @@ export async function fetchTPViewDataById(id: string) {
   }
 } // this one is needed in the tenderpackage/tpv 
 
+export interface GeometryDataRaw {
+  geometry_state: string;
+}
+
+export interface GeometryDataParsed {
+  geometry_state: {[dbid:number]: string}
+}
+
+export async function fetchGeometryStatusByClientViewId(id: string) {
+  
+  try { 
+
+    const query = `
+      SELECT
+        geometry_state 
+      FROM geometry_status
+      WHERE client_view_id = ?
+    `
+   const [rows]: [RowDataPacket[], FieldPacket[]] = await pool.query<RowDataPacket[]>(query, [id])
+
+   return rows[0] as GeometryDataRaw
+
+  } catch (err) {
+    console.error('fetchGeometryByClientViewId was not successful', err)
+  }
+
+}
+
 export async function fetchURNbyTPViewId(id: string) {
   try {
     

@@ -14,14 +14,24 @@ export default function SupersetData({selectedView, viewer, activeMenu}: Superse
     const [viewData, setViewData] = useState<any[] | undefined>(undefined);
     const [openSublist, setOpenSublist] = useState<{ [key: number]: boolean }>({});
 
+    // Mayb viewData preparation can be done on the server side as well
+
     useEffect(() => {
         const fetchDbidProps = async () => {
             try {
+                // here it fails when the state is organized only with the hidden nodes
+                // as for now we patch it with a warning that the isolate function should be used
+                
+                // SOme reading regarding possble solutions https://aps.autodesk.com/cloud_and_mobile/2015/12/select-all-elements-in-the-viewer-with-view-and-data-api-with-javascript.html
+
+                // maybe it is not that big of a deal since i need to do this visible nodes breakdown
+                // only for Eren here. In the T&T app the data assignment will be executed independently of
+                // the viewer.getState() (manual selection)
                 const isolatedArray = selectedView?.data.state.objectSet[0].isolated || [];
                 const instanceTree = viewer.model.getData().instanceTree;
-                const parentsArray: number[] = isolatedArray.map((dbid: number) => {
-                    return instanceTree.getNodeParentId(dbid)
-                })
+                const parentsArray: number[] = isolatedArray
+                    .map((dbid: number) => instanceTree.getNodeParentId(dbid))
+                    .filter((parentId: number) => parentId !== 1);
                 const uniqueParents = [...new Set(parentsArray)];
                 const components = await Promise.all(uniqueParents.map(async (dbid: number) => {
                     const name: string = await new Promise((resolve, reject) => {
@@ -63,9 +73,8 @@ export default function SupersetData({selectedView, viewer, activeMenu}: Superse
     };
 
     return (
-        <div id='superset-data' className={clsx('absolute bg-white w-4/5 lg:w-2/5 xl:w-2/6 2xl:w-1/4', {
-            'hidden': activeMenu !== "superset-data"
-        })} style={{ 
+        <div id='superset-data' className='absolute bg-white w-4/5 lg:w-2/5 xl:w-2/6 2xl:w-1/4'
+         style={{ 
             height: 'calc(70vh - 104.5px)', // i leave it this way as a reminder about the workaround i had to do to calculate the height of the element when it was full-width
             left: 56,
             top: 10,

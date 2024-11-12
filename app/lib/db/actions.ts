@@ -9,7 +9,7 @@ import {deleteFile, deleteManifest} from '@/app/lib/AutodeskViewer/services/aps'
 import { fetchClientViewsByProjectId } from '@/app/lib/db/data';
 import { createRoom } from '@/app/lib/db/actions-chat';
 import {labelGenerator} from '@/app/lib/labels-handler/labels-handler'
-import { s3_getSignedURL_qr } from '@/app/lib/aws-s3/actions';
+import { s3_getSignedURL_qr, s3_delete_label } from '@/app/lib/aws-s3/actions';
 
 // supplier schemas
 
@@ -482,4 +482,76 @@ export async function createSupersetView(prevState: StateProject, formData: Form
         },
         body: labelArray
     });
+}
+
+export type StateGeometryData = {
+    errors?: {
+        geometry_data?: string;
+        client_view_id?: string;
+    };
+    message?: string | null;
+}
+
+const FormSchemaGeometryData = z.object({
+    geometry_data: z.string({
+        invalid_type_error: 'geometry_data is missing',
+    }),
+    client_view_id: z.string({
+        invalid_type_error: 'client_view_id is missing',
+    }),
+});
+
+
+export async function createGeometryData(prevState: StateGeometryData, formData: FormData) {
+    console.log('Create geometry data event has been triggered!');
+
+    const validatedFields = FormSchemaGeometryData.safeParse({
+        geometry_data: formData.get('geometry-data'),
+        client_view_id: formData.get('client-view-id'),
+    });
+
+    if (!validatedFields.success) {
+        console.log("validatedFields is not successfull", validatedFields.error.flatten().fieldErrors);
+        return {
+          errors: validatedFields.error.flatten().fieldErrors,
+          message: 'Missing Fields. Failed to Add Machine.',
+        };
+    }
+
+    const {geometry_data, client_view_id} = validatedFields.data;
+
+    console.log('The geometry data to be submitted is ', geometry_data)
+
+    const query = `
+        INSERT INTO geometry_status (geometry_state, client_view_id)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE
+        geometry_state = VALUES(geometry_state)
+    `;
+
+    try {
+        await pool.query(query, [geometry_data, client_view_id])
+    } catch (err) {
+        console.error('createGeometryData was not successful, ', err)
+    }
+}
+
+export async function deleteSuperset(clientViewId: string, supersetId: string) {
+
+    try {
+
+        const query = `
+            DELETE FROM superset_view WHERE id = ?
+        `
+        
+        await pool.query(query, [supersetId]);
+
+        const res = await s3_delete_label(clientViewId, supersetId);
+
+        console.log("S3 delete res", res);
+
+    } catch (err) {
+        console.error('error from deleteSuperset', err)
+    }
+
 }
