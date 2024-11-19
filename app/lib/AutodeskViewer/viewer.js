@@ -18,13 +18,14 @@ export function initViewer(container) {
             const config = {
                 extensions: [
                     'Autodesk.DocumentBrowser',
-                    'Autodesk.BoxSelection'
+                    'Autodesk.BoxSelection',
+                    'Autodesk.Viewing.MarkupsCore',
+                    /* 'Autodesk.Viewing.MarkupsGui' */
                 ]
             };
             const viewer = new Autodesk.Viewing.GuiViewer3D(container, config);
             viewer.start();
-            viewer.setTheme('light-theme');
-
+            viewer.setTheme('dark-theme');
             resolve(viewer);
         });
     });
@@ -33,7 +34,30 @@ export function initViewer(container) {
 export function loadModel(viewer, urn) {
     return new Promise(function (resolve, reject) {
         function onDocumentLoadSuccess(doc) {
-            resolve(viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry()));
+
+            // setting up the Edit2D
+            console.log('Autodesk.Edit2D extension loading...');
+            viewer.loadExtension('Autodesk.Edit2D').then(edit2d => {
+                edit2d.registerDefaultTools();
+
+                const ctx = edit2d.defaultContext;
+                ctx.layer;
+                ctx.gizmoLayer;
+                ctx.undoStack;
+                ctx.selection;
+                ctx.snapper;
+
+               /*  ctx.undoStack.addEventListener(Autodesk.Edit2D.UndoStack.BEFORE_ACTION, beforeAction);
+                ctx.undoStack.addEventListener(Autodesk.Edit2D.UndoStack.BEFORE_ACTION, afterAction);
+
+                ctx.selection.addEventListener(Autodesk.Edit2D.Selection.Events.SELECTION_CHANGED, onSelectionChanged);
+                ctx.selection.addEventListener(Autodesk.Edit2D.Selection.Events.SELECTION_HOVER_CHANGED, onHoverChanged); */
+
+                /* ctx.selection.selectOnly(myItem.shape);
+                ctx.selection.setHoverID(shape.id); */
+
+                resolve(viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry()));
+            }).catch(reject);
         }
         function onDocumentLoadFailure(code, message, errors) {
             reject({ code, message, errors });

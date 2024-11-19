@@ -428,6 +428,12 @@ const FormSchemaSuperset = z.object({
     }),
     client_view_id: z.string({
         invalid_type_error: 'Client View Id is missing',
+    }),
+    client_view_title: z.string({
+        invalid_type_error: 'CLient View title is missing',
+    }),
+    client_view_subtitle: z.string({
+        invalid_type_error: 'Client View subtitle is missing',
     })
 });
 
@@ -437,6 +443,8 @@ export type StateSuperset = {
         data?: string;
         client_view_id?: string;
         id?: string;
+        client_view_title?: string;
+        client_view_subtitle?: string;
     };
     message?: string | null;
 }
@@ -448,24 +456,27 @@ export async function createSupersetView(prevState: StateProject, formData: Form
         data: formData.get('new-superset-view'),
         client_view_id: formData.get('new-superset-client-id'),
         id: formData.get('new-superset-id'),
+        client_view_title: formData.get('client-view-title'),
+        client_view_subtitle: formData.get('client-view-subtitle')
     });
 
     if (!validatedFields.success) {
         console.log("validatedFields is not successfull");
+        console.log(validatedFields.error.flatten().fieldErrors);
         return {
           errors: validatedFields.error.flatten().fieldErrors,
           message: 'Missing Fields. Failed to Add Machine.',
         };
     }
 
-    const {name, data, client_view_id, id} = validatedFields.data;
+    const {name, data, client_view_id, id, client_view_title, client_view_subtitle} = validatedFields.data;
 
     await pool.query(`
         INSERT INTO superset_view (id, ss_title, data, client_view_id)
         VALUES ('${id}', '${name}','${data}', '${client_view_id}')
     `)
 
-    const labelArray = await labelGenerator({zoneId: id, zoneName: name, viewId: client_view_id});
+    const labelArray = await labelGenerator({zoneId: id, zoneName: name, viewId: client_view_id, client_view_title: client_view_title, client_view_subtitle: client_view_subtitle});
     const label_signedUrl = await s3_getSignedURL_qr(client_view_id, id);
 
     if (label_signedUrl.failure !== undefined) {

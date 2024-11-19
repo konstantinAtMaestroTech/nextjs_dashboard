@@ -39,7 +39,9 @@ interface Utilities {
     page_id: string;
     viewsFetched: View[];
     geometry_data: GeometryDataParsed;
-    session: Session | null
+    session: Session | null;
+    title: string;
+    subtitle: string;
 }
 
 export default function Utilities({
@@ -47,7 +49,9 @@ export default function Utilities({
     page_id,
     viewsFetched,
     geometry_data,
-    session
+    session,
+    title,
+    subtitle
 }: Utilities) : JSX.Element {
 
     const [viewer, setViewer] = useState<any | null>(null);
@@ -100,7 +104,7 @@ export default function Utilities({
                     <Viewer urn={urn} setViewer={setViewer} selectedView={selectedView}/> {/* This might be a problem if the viewer rerenders everytime the selected view is changed. Let's see */}
                     <Icons session={session} activeMenu={activeMenu} setActiveMenu={setActiveMenu}/>
                     {/* {viewer ? <Scanner activeMenu={activeMenu} setActiveMenu={setActiveMenu} views={views} viewer={viewer} setSelectedView={setSelectedView}/> : null} */}
-                    {session && viewer ? <CreateSuperset viewer={viewer} activeMenu={activeMenu} room={page_id} setViews={setViews}/> : null}
+                    {session && viewer ? <CreateSuperset viewer={viewer} activeMenu={activeMenu} room={page_id} setViews={setViews} title={title} subtitle={subtitle}/> : null}
                     {activeMenu === 'superset' && <SupersetSelector geometryData={geometryData} views={views} viewer={viewer} activeMenu={activeMenu} selectedView={selectedView} showStatus={showStatus} setShowStatus={setShowStatus} setSelectedView={setSelectedView} room={page_id} setViews={setViews}/>}
                     {activeMenu === 'superset-data' && <SupersetData selectedView={selectedView} viewer={viewer} activeMenu={activeMenu} />}
                     {session && activeMenu === 'status-controller' && <StatusController activeMenu={activeMenu}  setIsLoading={setIsLoading} geometryData={geometryData} setShowStatus={setShowStatus} setGeometryData={setGeometryData} viewer={viewer} room={page_id} />}

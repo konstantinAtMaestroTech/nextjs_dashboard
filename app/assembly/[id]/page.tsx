@@ -43,7 +43,7 @@ export default async function Page({params}: {params: {id: string}}): Promise<JS
                     </p>
                 </div>
             </div>
-            <Utilities session={session} urn={urn} viewsFetched={viewsFetched} page_id={id} geometry_data={geometry_data}/>
+            <Utilities session={session} urn={urn} title={title} subtitle={subtitle} viewsFetched={viewsFetched} page_id={id} geometry_data={geometry_data}/>
         </main>
     );
 

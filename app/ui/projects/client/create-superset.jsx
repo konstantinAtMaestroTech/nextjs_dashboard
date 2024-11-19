@@ -3,7 +3,7 @@ import {createSupersetView} from '@/app/lib/db/actions';
 import {v4} from 'uuid';
 import {useState, useActionState} from 'react';
 
-export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
+export default function CreateSuperset({ viewer, activeMenu, room, setViews, title, subtitle}) {
 
     const [viewerState, setViewerState] = useState('');
     const initialState = {message:null, errors: {}};
@@ -26,6 +26,8 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
         formData.append('new-superset-view', viewStringified);
         formData.append('new-superset-client-id', room);
         formData.append('new-superset-id', id);
+        formData.append('client-view-title', title);
+        formData.append('client-view-subtitle', subtitle);
 
         formAction(formData);
 
@@ -88,20 +90,6 @@ export default function CreateSuperset({ viewer, activeMenu, room, setViews}) {
                                 value={supersetName}
                                 onChange={(e) => setSupersetName(e.target.value)}
                                 required
-                            />
-                            <input 
-                                type='text'
-                                name='new-superset-view'
-                                value={viewerState}
-                                readOnly
-                                hidden
-                            />
-                            <input 
-                                type='text'
-                                name='new-superset-client-id'
-                                value={room}
-                                readOnly
-                                hidden
                             />
                         </div>
                     </div>
