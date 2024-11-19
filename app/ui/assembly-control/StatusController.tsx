@@ -54,15 +54,17 @@ export function getLeafNodes( model: any, dbIds: number[] ): Promise<number[]> {
   })
 }
 
-const statusOptions = ['M', 'D'];
+const statusOptions = ['M', 'I', 'B'];
 
 export function getColorForStatus(status: string) {
 
     switch (status) {
         case statusOptions[0]:
-            return new THREE.Vector4(0.0, 1.0, 0.0, 1.0);
+            return new THREE.Vector4(0.0, 1.0, 0.0, 1.0); // green for mounted
         case statusOptions[1]:
-            return new THREE.Vector4(1.0, 1.0, 0.0, 1.0);
+            return new THREE.Vector4(1.0, 1.0, 0.0, 1.0); // yellow in progress
+        case statusOptions[2]:
+            return new THREE.Vector4(1.0, 0.0, 0.0, 1.0); // red for blocked
         // Add more cases as needed
         default:
             return
@@ -164,15 +166,18 @@ export default function StatusController({activeMenu, geometryData, setGeometryD
                             {`The number of elements selected is ${selectedNodes.length}`}
                         </div>
                         <select id="options" value={status} onChange={handleStatusChange}>
-                            <option value="">Select an option</option>
+                            <option value="">Default</option>
                             {statusOptions.map((status, index) => {
                                 let displayName;
                                 switch (status) {
                                     case 'M':
                                         displayName = 'Mounted';
                                         break;
-                                    case 'D':
-                                        displayName = 'Delivered';
+                                    case 'I':
+                                        displayName = 'In Progress';
+                                        break;
+                                    case 'B':
+                                        displayName = 'Blocked';
                                         break;
                                     default:
                                         displayName = status;
